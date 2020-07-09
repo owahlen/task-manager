@@ -1,0 +1,25 @@
+version: '3.1'
+
+# adminer is reachable under http://localhost:8090
+# Login with:
+# Database System: PostgreSQL
+# Server: db
+# User: postgres
+# Password: example
+# Database: test
+
+services:
+
+  db:
+    image: postgres
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: example
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8090:8080
