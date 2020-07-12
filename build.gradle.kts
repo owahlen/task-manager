@@ -18,8 +18,8 @@ repositories {
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
 	implementation("org.springframework.boot:spring-boot-starter-webflux")
+	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
-	//implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
@@ -29,8 +29,11 @@ dependencies {
 	runtimeOnly("io.r2dbc:r2dbc-postgresql")
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
 		exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
+		exclude(module = "mockito-core")
 	}
+	//testImplementation("org.springframework.boot:spring-security-test")
 	testImplementation("io.projectreactor:reactor-test")
+	testImplementation("com.ninja-squad:springmockk:2.0.2")
 	testImplementation("io.mockk:mockk:1.10.0")
 	testRuntimeOnly("com.h2database:h2")
 	testRuntimeOnly("io.r2dbc:r2dbc-h2")

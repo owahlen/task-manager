@@ -6,20 +6,13 @@ import com.example.rest.model.TaskDTO
 import com.example.rest.model.toModel
 import com.example.rest.toDto
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.count
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.reactive.asFlow
-import kotlinx.coroutines.reactive.awaitFirstOrNull
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.data.r2dbc.DataR2dbcTest
 import org.springframework.context.annotation.Import
-import reactor.kotlin.core.publisher.toFlux
-import java.util.stream.Stream
 
 @ExperimentalCoroutinesApi
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -47,7 +40,7 @@ internal class TaskServiceIT {
     fun afterEach() {
         runBlocking {
             val cleanupTasks = taskRepository.findAll().filter { !testTaskIds.contains(it.id) }
-            taskRepository.deleteAll(cleanupTasks).awaitFirstOrNull()
+            taskRepository.deleteAll(cleanupTasks)
         }
     }
 
@@ -90,7 +83,7 @@ internal class TaskServiceIT {
         runBlocking {
             // setup
             val taskDTO = TaskDTO("Completed task", true)
-            val completedTask = taskRepository.save(taskDTO.toModel()).awaitFirstOrNull()
+            val completedTask = taskRepository.save(taskDTO.toModel())
             assertThat(completedTask).isNotNull()
             // when
             val resp = taskService.findByCompleted(true)
@@ -120,9 +113,8 @@ internal class TaskServiceIT {
             // when
             val resp = taskService.create(taskDTO)
             // then
-            assertThat(resp).isNotNull()
-            assertThat(resp?.id).isNotNull()
-            val dbTask = taskRepository.findById(resp!!.id!!).awaitFirstOrNull()
+            assertThat(resp.id).isNotNull()
+            val dbTask = taskRepository.findById(resp.id!!)
             assertThat(dbTask).isNotNull()
             assertThat(dbTask!!.description).isEqualTo("New task")
         }
@@ -139,7 +131,7 @@ internal class TaskServiceIT {
             // then
             assertThat(resp).isNotNull()
             assertThat(resp?.id).isNotNull()
-            val dbTask = taskRepository.findById(newTaskId).awaitFirstOrNull()
+            val dbTask = taskRepository.findById(newTaskId)
             assertThat(dbTask).isNotNull()
             assertThat(dbTask!!.description).isEqualTo("Updated task")
         }
@@ -167,7 +159,7 @@ internal class TaskServiceIT {
             val resp = taskService.delete(newTaskId)
             // then
             assertThat(resp).isTrue()
-            val dbTask = taskRepository.findById(newTaskId).awaitFirstOrNull()
+            val dbTask = taskRepository.findById(newTaskId)
             assertThat(dbTask).isNull()
         }
     }
@@ -184,20 +176,20 @@ internal class TaskServiceIT {
 
     private suspend fun initDatabase(): Flow<Task> {
         // delete all tasks
-        taskRepository.deleteAll().awaitFirstOrNull()
+        taskRepository.deleteAll()
         // return Flow of new task creations
-        val initData = Stream.of(
+        val initData = flowOf(
                 Task(null, "Task1", false),
                 Task(null, "Task2", false),
                 Task(null, "Task3", false)
         )
-        return taskRepository.saveAll(initData.toFlux()).asFlow()
+        return taskRepository.saveAll(initData)
     }
 
     private suspend fun createTask(taskDTO: TaskDTO): Task {
-        val newTask = taskRepository.save(taskDTO.toModel()).awaitFirstOrNull()
+        val newTask = taskRepository.save(taskDTO.toModel())
         assertThat(newTask).isNotNull()
-        assertThat(newTask!!.id).isNotNull()
+        assertThat(newTask.id).isNotNull()
         return newTask
     }
 }
