@@ -24,7 +24,9 @@ class GlobalExceptionHandler {
     @ExceptionHandler(WebExchangeBindException::class)
     fun handleWebExchangeBindException(e: WebExchangeBindException): HttpStatus {
         throw object : WebExchangeBindException(e.methodParameter!!, e.bindingResult) {
-            override val message = "${fieldError?.field} has invalid value '${fieldError?.rejectedValue}'"
+            override val message: String =
+                    if (fieldError != null) "${fieldError?.field} [${fieldError?.rejectedValue}] ${fieldError?.defaultMessage}"
+                    else "invalid parameters"
         }
     }
 
