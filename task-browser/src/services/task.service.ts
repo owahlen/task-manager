@@ -26,16 +26,8 @@ class TaskService {
         return await http.delete(`${taskPath}/${id}`);
     }
 
-    async deleteAll(): Promise<AxiosResponse<boolean>> {
-        return await http.delete(`${taskPath}`);
-    }
-
     async findByDescription(description: string): Promise<AxiosResponse<Array<Task>>> {
         return await http.get(`${taskPath}/search?description=${description}`);
-    }
-
-    async findByCompleted(completed: boolean): Promise<AxiosResponse<Array<Task>>> {
-        return await http.get(`${taskPath}/search?completed=${completed}`);
     }
 
 }

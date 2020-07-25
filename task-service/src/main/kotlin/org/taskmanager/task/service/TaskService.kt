@@ -11,6 +11,7 @@ class TaskService(private val taskRepository: TaskRepository) {
 
     suspend fun findAll() = taskRepository.findAll()
     suspend fun findById(id: Long) = taskRepository.findById(id)
+    suspend fun findByDescription(description: String) = taskRepository.findByDescriptionContainingIgnoreCase(description)
     suspend fun findByCompleted(completed: Boolean) = taskRepository.findByCompleted(completed)
     suspend fun create(task: TaskDTO) = taskRepository.save(task.toModel())
 

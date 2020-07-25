@@ -22,15 +22,29 @@ class TaskController(private val taskService: TaskService, private val userServi
     }
 
     @GetMapping("/task/search")
-    suspend fun search(@RequestParam criterion: Map<String, String?>): Flow<Task> {
-        if (criterion.containsKey("completed")) {
-            val completed = criterion.get("completed")
-            if (completed == null || completed != "true" && completed != "false") {
-                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "search criterion for 'completed' must be 'true' or 'false'")
+    suspend fun search(@RequestParam criterionMap: Map<String, String?>): Flow<Task> {
+        if(criterionMap.size!=1) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "There must be one search criterion out of: "+
+                    enumValues<SearchCriterion>().joinToString { "'${it.name}'" })
+        }
+        val criterion = criterionMap.keys.first()
+        when(criterion) {
+            "description" -> {
+                val description = criterionMap.get(criterion)
+                if (description.isNullOrBlank()) {
+                    return taskService.findAll()
+                }
+                return taskService.findByDescription(description)
             }
-            return taskService.findByCompleted(completed.toBoolean())
-        } else {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "The search parameter 'completed' must be provided")
+            "completed" -> {
+                val completed = criterionMap.get(criterion)
+                if (completed == null || completed != "true" && completed != "false") {
+                    throw ResponseStatusException(HttpStatus.BAD_REQUEST, "search criterion for 'completed' must be 'true' or 'false'")
+                }
+                return taskService.findByCompleted(completed.toBoolean())
+            }
+            else -> throw ResponseStatusException(HttpStatus.BAD_REQUEST, "The search parameter must be one of "+
+                    enumValues<SearchCriterion>().joinToString { "'${it.name}'" })
         }
     }
 
@@ -63,4 +77,6 @@ class TaskController(private val taskService: TaskService, private val userServi
         if (entityId == null || entityId < 1) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "task id must be a positive integer")
         if (!taskService.delete(entityId)) throw ResponseStatusException(HttpStatus.NOT_FOUND, "task with id '$id' not found")
     }
+
+    private enum class SearchCriterion { description, completed }
 }

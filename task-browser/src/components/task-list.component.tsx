@@ -18,7 +18,6 @@ export default class TaskList extends Component<any,State> {
         this.retrieveTasks = this.retrieveTasks.bind(this);
         this.refreshList = this.refreshList.bind(this);
         this.setActiveTask = this.setActiveTask.bind(this);
-        this.removeAllTasks = this.removeAllTasks.bind(this);
         this.searchDescription = this.searchDescription.bind(this);
 
         this.state = {
@@ -63,15 +62,6 @@ export default class TaskList extends Component<any,State> {
             currentTask: task,
             currentIndex: index
         });
-    }
-
-    async removeAllTasks() {
-        try {
-            await TaskService.deleteAll();
-            this.refreshList();
-        } catch (e) {
-            console.log(e)
-        }
     }
 
     async searchDescription() {
@@ -129,9 +119,6 @@ export default class TaskList extends Component<any,State> {
                         ))}
                     </ul>
 
-                    <button className="m-3 btn btn-sm btn-danger" onClick={this.removeAllTasks}>
-                        Remove All
-                    </button>
                 </div>
                 <div className="col-md-6">
                     {currentTask ? (

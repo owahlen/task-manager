@@ -9,6 +9,8 @@ import org.springframework.stereotype.Repository
 @Repository
 interface TaskRepository : CoroutineCrudRepository<Task, Long> {
 
+    fun findByDescriptionContainingIgnoreCase(description: String): Flow<Task>
+
     @Query("SELECT t.* FROM task t WHERE t.completed = :completed")
     fun findByCompleted(completed: Boolean): Flow<Task>
 
