@@ -29,6 +29,7 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
+	implementation("com.nimbusds:nimbus-jose-jwt:8.19")
 	runtimeOnly("org.postgresql:postgresql")
 	runtimeOnly("io.r2dbc:r2dbc-postgresql")
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
