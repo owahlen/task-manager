@@ -39,21 +39,26 @@ class ApiSecurityConfiguration {
 
     @Bean
     fun springSecurityFilterChain(http: ServerHttpSecurity): SecurityWebFilterChain {
+        //@formatter:off
         http
                 .authorizeExchange()
-                .anyExchange().permitAll()
-                .and()
+                    .anyExchange()
+                        .permitAll()
+                    .and()
                 .httpBasic()
-                .and()
+                    .and()
                 .securityContextRepository(NoOpServerSecurityContextRepository.getInstance()) // stateless
                 .exceptionHandling()
-                .authenticationEntryPoint { _, exception -> Mono.error(exception) }
-                .accessDeniedHandler { _, exception -> Mono.error(exception) }
-                .and()
+                    .authenticationEntryPoint { _, exception -> Mono.error(exception) }
+                    .accessDeniedHandler { _, exception -> Mono.error(exception) }
+                    .and()
                 .cors()
-                .and()
-                .csrf().disable()
-                .logout().disable()
+                    .and()
+                .csrf()
+                    .disable()
+                .logout()
+                    .disable()
+        //@formatter:on
         return http.build()
     }
 
@@ -61,7 +66,7 @@ class ApiSecurityConfiguration {
     fun corsConfigurationSource(): CorsConfigurationSource {
         val corsConfiguration = CorsConfiguration()
         corsConfiguration.allowedOrigins = listOf("*")
-        corsConfiguration.allowedMethods = listOf(GET, POST, PUT, DELETE).map ( HttpMethod::name )
+        corsConfiguration.allowedMethods = listOf(GET, POST, PUT, DELETE).map(HttpMethod::name)
         corsConfiguration.allowedHeaders = listOf("*")
         val source = UrlBasedCorsConfigurationSource()
         source.registerCorsConfiguration("/**", corsConfiguration)
