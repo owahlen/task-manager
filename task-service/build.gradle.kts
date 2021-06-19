@@ -1,17 +1,16 @@
-import org.jetbrains.kotlin.com.google.common.collect.ImmutableMap
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-	id("org.springframework.boot") version "2.3.1.RELEASE"
-	id("io.spring.dependency-management") version "1.0.9.RELEASE"
-	id("com.palantir.docker") version "0.25.0"
-	id("com.palantir.docker-run") version "0.25.0"
-	kotlin("jvm") version "1.3.72"
-	kotlin("plugin.spring") version "1.3.72"
+	id("org.springframework.boot") version "2.5.1"
+	id("io.spring.dependency-management") version "1.0.11.RELEASE"
+	id("com.palantir.docker") version "0.26.0"
+	id("com.palantir.docker-run") version "0.26.0"
+	kotlin("jvm") version "1.5.10"
+	kotlin("plugin.spring") version "1.5.10"
 }
 
 group = "org.example"
-version = "0.0.1-SNAPSHOT"
+version = "0.0.2-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.VERSION_11
 
 repositories {
@@ -37,8 +36,8 @@ dependencies {
 	}
 	//testImplementation("org.springframework.boot:spring-security-test")
 	testImplementation("io.projectreactor:reactor-test")
-	testImplementation("com.ninja-squad:springmockk:2.0.2")
-	testImplementation("io.mockk:mockk:1.10.0")
+	testImplementation("com.ninja-squad:springmockk:3.0.1")
+	testImplementation("io.mockk:mockk:1.11.0")
 	testRuntimeOnly("com.h2database:h2")
 	testRuntimeOnly("io.r2dbc:r2dbc-h2")
 }

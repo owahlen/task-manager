@@ -1,7 +1,10 @@
 logging:
     level:
         org.springframework.data.r2dbc: DEBUG
-
+server:
+    error:
+        include-binding-errors: never
+        include-message: always
 spring:
     r2dbc:
         password: ''
