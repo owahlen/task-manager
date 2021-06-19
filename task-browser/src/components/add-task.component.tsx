@@ -64,13 +64,13 @@ export default class AddTask extends Component<any, State> {
                 {this.state.submitted ? (
                     <div>
                         <h4>You submitted successfully!</h4>
-                        <button className="btn btn-success" onClick={this.newTask}>
+                        <button className="btn btn-outline-success btn-sm" onClick={this.newTask}>
                             Add
                         </button>
                     </div>
                 ) : (
                     <div>
-                        <div className="form-group">
+                        <div className="form-group mb-2">
                             <label htmlFor="description">Description</label>
                             <input
                                 type="text"
@@ -83,7 +83,7 @@ export default class AddTask extends Component<any, State> {
                             />
                         </div>
 
-                        <button onClick={this.saveTask} className="btn btn-success">
+                        <button onClick={this.saveTask} className="btn btn-outline-success btn-sm">
                             Submit
                         </button>
                     </div>

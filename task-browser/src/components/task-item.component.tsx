@@ -100,9 +100,9 @@ export default class TaskItem extends Component<any, State> {
             <div>
                 {currentTask ? (
                     <div className="edit-form">
-                        <h4>Tutorial</h4>
+                        <h4>Edit Task</h4>
                         <form>
-                            <div className="form-group">
+                            <div className="form-group mb-2">
                                 <label htmlFor="description">Description</label>
                                 <input
                                     type="text"
@@ -113,7 +113,7 @@ export default class TaskItem extends Component<any, State> {
                                 />
                             </div>
 
-                            <div className="form-group">
+                            <div className="form-group mb-2">
                                 <label>
                                     <strong>Status:</strong>
                                 </label>
@@ -123,14 +123,14 @@ export default class TaskItem extends Component<any, State> {
 
                         {currentTask.completed ? (
                             <button
-                                className="badge badge-primary mr-2"
+                                className="btn btn-outline-primary btn-sm me-2"
                                 onClick={() => this.updateCompleted(false)}
                             >
                                 Incomplete
                             </button>
                         ) : (
                             <button
-                                className="badge badge-primary mr-2"
+                                className="btn btn-outline-primary btn-sm me-2"
                                 onClick={() => this.updateCompleted(true)}
                             >
                                 Complete
@@ -138,7 +138,7 @@ export default class TaskItem extends Component<any, State> {
                         )}
 
                         <button
-                            className="badge badge-danger mr-2"
+                            className="btn btn-outline-danger btn-sm me-2"
                             onClick={this.deleteTask}
                         >
                             Delete
@@ -146,7 +146,7 @@ export default class TaskItem extends Component<any, State> {
 
                         <button
                             type="submit"
-                            className="badge badge-success"
+                            className="btn btn-outline-success btn-sm"
                             onClick={this.updateTask}
                         >
                             Update

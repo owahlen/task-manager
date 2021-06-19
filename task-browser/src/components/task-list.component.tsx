@@ -2,6 +2,8 @@ import React, {Component} from "react";
 import TaskService from "../services/task.service";
 import {Link} from "react-router-dom";
 import {Task} from "../models/task.model";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faSearch} from "@fortawesome/free-solid-svg-icons";
 
 interface State {
     tasks: Array<Task>;
@@ -10,7 +12,7 @@ interface State {
     searchDescription: string;
 }
 
-export default class TaskList extends Component<any,State> {
+export default class TaskList extends Component<any, State> {
 
     constructor(props: any) {
         super(props);
@@ -70,7 +72,7 @@ export default class TaskList extends Component<any,State> {
             this.setState({
                 tasks: response.data
             })
-        } catch(e) {
+        } catch (e) {
             console.log(e)
         }
     }
@@ -81,23 +83,21 @@ export default class TaskList extends Component<any,State> {
         return (
             <div className="list row">
                 <div className="col-md-8">
-                    <div className="input-group mb-3">
-                        <input
-                            type="text"
-                            className="form-control"
-                            placeholder="Search by description"
-                            value={searchDescription}
-                            onChange={this.onChangeSearchDescription}
-                        />
-                        <div className="input-group-append">
-                            <button
-                                className="btn btn-outline-secondary"
-                                type="button"
-                                onClick={this.searchDescription}
-                            >
-                                Search
-                            </button>
+                    <div className="input-group mt-4 mb-4">
+                        <div className="form-outline">
+                            <input
+                                type="search"
+                                className="form-control"
+                                placeholder="Search"
+                                value={searchDescription}
+                                onChange={this.onChangeSearchDescription}/>
                         </div>
+                        <button
+                            className="btn btn-primary"
+                            type="button"
+                            onClick={this.searchDescription}>
+                            <FontAwesomeIcon icon={faSearch} />
+                        </button>
                     </div>
                 </div>
                 <div className="col-md-6">
@@ -112,8 +112,7 @@ export default class TaskList extends Component<any,State> {
                                     (index === currentIndex ? "active" : "")
                                 }
                                 onClick={() => this.setActiveTask(task, index)}
-                                key={index}
-                            >
+                                key={index}>
                                 {task.description}
                             </li>
                         ))}
@@ -137,7 +136,7 @@ export default class TaskList extends Component<any,State> {
                                 {currentTask.completed ? "Completed" : "Open"}
                             </div>
 
-                            <Link to={"/task/" + currentTask.id} className="badge badge-warning">
+                            <Link to={"/task/" + currentTask.id} className="btn btn-outline-warning btn-sm">
                                 Edit
                             </Link>
                         </div>
