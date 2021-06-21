@@ -3,17 +3,21 @@ logging:
         root: INFO
         org.springframework.security: INFO
         org.springframework.data.r2dbc: DEBUG
+
 server:
     error:
         include-binding-errors: never
         include-message: always
+
 spring:
     r2dbc:
         password: example
         url: r2dbc:postgresql://localhost/postgres
         username: postgres
 
-springfox:
-    documentation:
-        swagger-ui:
-            enabled: true
+springdoc:
+    api-docs:
+        enabled: true
+    swagger-ui:
+        enabled: true
+

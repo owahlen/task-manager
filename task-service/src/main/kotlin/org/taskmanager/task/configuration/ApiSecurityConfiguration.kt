@@ -1,24 +1,28 @@
 package org.taskmanager.task.configuration
 
 import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpMethod.*
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity
+import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity
 import org.springframework.security.config.web.server.ServerHttpSecurity
+import org.springframework.security.config.web.server.invoke
 import org.springframework.security.core.userdetails.MapReactiveUserDetailsService
+import org.springframework.security.core.userdetails.ReactiveUserDetailsService
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.crypto.factory.PasswordEncoderFactories
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.server.SecurityWebFilterChain
-import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository
+import org.springframework.security.web.server.ServerAuthenticationEntryPoint
+import org.springframework.security.web.server.authorization.ServerAccessDeniedHandler
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.reactive.CorsConfigurationSource
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource
 import reactor.core.publisher.Mono
 
-
-@Configuration
+@EnableWebFluxSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 class ApiSecurityConfiguration {
 
     @Bean
@@ -27,39 +31,14 @@ class ApiSecurityConfiguration {
     }
 
     @Bean
-    fun userDetailsService(): MapReactiveUserDetailsService {
+    fun userDetailsService(): ReactiveUserDetailsService {
         val user: UserDetails = User.builder()
-                .passwordEncoder(passwordEncoder()::encode)
-                .username("user")
-                .password("password")
-                .roles("USER")
-                .build()
+            .passwordEncoder(passwordEncoder()::encode)
+            .username("user")
+            .password("password")
+            .roles("USER")
+            .build()
         return MapReactiveUserDetailsService(user)
-    }
-
-    @Bean
-    fun springSecurityFilterChain(http: ServerHttpSecurity): SecurityWebFilterChain {
-        //@formatter:off
-        http
-                .authorizeExchange()
-                    .anyExchange()
-                        .permitAll()
-                    .and()
-                .httpBasic()
-                    .and()
-                .securityContextRepository(NoOpServerSecurityContextRepository.getInstance()) // stateless
-                .exceptionHandling()
-                    .authenticationEntryPoint { _, exception -> Mono.error(exception) }
-                    .accessDeniedHandler { _, exception -> Mono.error(exception) }
-                    .and()
-                .cors()
-                    .and()
-                .csrf()
-                    .disable()
-                .logout()
-                    .disable()
-        //@formatter:on
-        return http.build()
     }
 
     @Bean
@@ -71,6 +50,26 @@ class ApiSecurityConfiguration {
         val source = UrlBasedCorsConfigurationSource()
         source.registerCorsConfiguration("/**", corsConfiguration)
         return source
+    }
+
+    @Bean
+    fun springSecurityFilterChain(http: ServerHttpSecurity): SecurityWebFilterChain {
+        return http {
+            authorizeExchange {
+//                authorize(anyExchange, authenticated)
+                authorize(anyExchange, permitAll)
+            }
+            httpBasic { }
+            exceptionHandling {
+                authenticationEntryPoint = ServerAuthenticationEntryPoint { _, exception -> Mono.error(exception) }
+                accessDeniedHandler = ServerAccessDeniedHandler { _, exception -> Mono.error(exception) }
+            }
+            cors {
+                configurationSource = corsConfigurationSource()
+            }
+            csrf { disable() }
+            logout { disable() }
+        }
     }
 
 }

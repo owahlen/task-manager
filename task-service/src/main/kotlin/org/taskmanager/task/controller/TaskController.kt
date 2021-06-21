@@ -6,13 +6,14 @@ import org.taskmanager.task.service.UserService
 import kotlinx.coroutines.flow.Flow
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ResponseStatusException
 import org.taskmanager.task.service.TaskService
 import javax.validation.Valid
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/v1")
 class TaskController(private val taskService: TaskService, private val userService: UserService) {
     private val logger = LoggerFactory.getLogger(TaskController::class.java)
 
@@ -69,6 +70,7 @@ class TaskController(private val taskService: TaskService, private val userServi
                 ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "task with id '$id' not found")
     }
 
+    @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/task/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     suspend fun deleteTask(@PathVariable id: String) {
