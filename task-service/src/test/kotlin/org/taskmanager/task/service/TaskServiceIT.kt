@@ -1,10 +1,5 @@
 package org.taskmanager.task.service
 
-import org.taskmanager.task.configuration.DatabaseConfiguration
-import org.taskmanager.task.model.Task
-import org.taskmanager.task.model.TaskDTO
-import org.taskmanager.task.model.toModel
-import org.taskmanager.task.toDto
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.runBlocking
@@ -13,7 +8,11 @@ import org.junit.jupiter.api.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.data.r2dbc.DataR2dbcTest
 import org.springframework.context.annotation.Import
+import org.taskmanager.task.configuration.DatabaseConfiguration
+import org.taskmanager.task.domain.Task
 import org.taskmanager.task.repository.TaskRepository
+import org.taskmanager.task.service.dto.TaskDTO
+import org.taskmanager.task.service.mapper.toTask
 
 @ExperimentalCoroutinesApi
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -83,8 +82,8 @@ internal class TaskServiceIT {
     fun `findByCompleted returns a value`() {
         runBlocking {
             // setup
-            val taskDTO = TaskDTO("Completed task", true)
-            val completedTask = taskRepository.save(taskDTO.toModel())
+            val taskDTO = TaskDTO(null, "Completed task", true)
+            val completedTask = taskRepository.save(taskDTO.toTask())
             assertThat(completedTask).isNotNull()
             // when
             val resp = taskService.findByCompleted(true)
@@ -110,7 +109,7 @@ internal class TaskServiceIT {
     fun `create creates a task`() {
         runBlocking {
             // setup
-            val taskDTO = TaskDTO("New task", true)
+            val taskDTO = TaskDTO(null, "New task", true)
             // when
             val resp = taskService.create(taskDTO)
             // then
@@ -125,10 +124,12 @@ internal class TaskServiceIT {
     fun `update updates a task`() {
         runBlocking {
             // setup
-            val newTask = createTask(TaskDTO("Task to update", true))
+            val taskDTO = TaskDTO(null,"Task to update", true)
+            val newTask = createTask(taskDTO)
             val newTaskId = newTask.id!!
+            val updateTaskDTO = taskDTO.copy(id=newTaskId, description = "Updated task")
             // when
-            val resp = taskService.update(newTaskId, newTask.toDto(description = "Updated task"))
+            val resp = taskService.update(updateTaskDTO)
             // then
             assertThat(resp).isNotNull()
             assertThat(resp?.id).isNotNull()
@@ -142,9 +143,9 @@ internal class TaskServiceIT {
     fun `update nonexistent task returns null`() {
         runBlocking {
             // setup
-            val nonexistentTask = TaskDTO("Nonexistent", false)
+            val nonexistentTaskDTO = TaskDTO(999,"Nonexistent", false)
             // when
-            val resp = taskService.update(999, nonexistentTask)
+            val resp = taskService.update(nonexistentTaskDTO)
             // then
             assertThat(resp).isNull()
         }
@@ -154,7 +155,7 @@ internal class TaskServiceIT {
     fun `delete deletes existing task returns true`() {
         runBlocking {
             // setup
-            val newTask = createTask(TaskDTO("Task to delete", true))
+            val newTask = createTask(TaskDTO(null, "Task to delete", true))
             val newTaskId = newTask.id!!
             // when
             val resp = taskService.delete(newTaskId)
@@ -180,15 +181,15 @@ internal class TaskServiceIT {
         taskRepository.deleteAll()
         // return Flow of new task creations
         val initData = flowOf(
-                Task(null, "Task1", false),
-                Task(null, "Task2", false),
-                Task(null, "Task3", false)
+            Task(null, "Task1", false),
+            Task(null, "Task2", false),
+            Task(null, "Task3", false)
         )
         return taskRepository.saveAll(initData)
     }
 
     private suspend fun createTask(taskDTO: TaskDTO): Task {
-        val newTask = taskRepository.save(taskDTO.toModel())
+        val newTask = taskRepository.save(taskDTO.toTask())
         assertThat(newTask).isNotNull()
         assertThat(newTask.id).isNotNull()
         return newTask

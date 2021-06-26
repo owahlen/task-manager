@@ -16,18 +16,16 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.body
 import org.springframework.test.web.reactive.server.expectBody
 import org.taskmanager.task.configuration.ApiSecurityConfiguration
-import org.taskmanager.task.controller.TaskController
-import org.taskmanager.task.createTask
-import org.taskmanager.task.model.Task
-import org.taskmanager.task.model.TaskDTO
-import org.taskmanager.task.model.toModel
+import org.taskmanager.task.createTaskDTO
 import org.taskmanager.task.service.TaskService
-import org.taskmanager.task.toDto
 import org.taskmanager.task.service.UserService
+import org.taskmanager.task.service.dto.TaskDTO
 
 @WebFluxTest(TaskController::class)
 @Import(ApiSecurityConfiguration::class)
 internal class TaskControllerTest {
+
+    private val controllerRequestMapping = "/api/v1"
 
     @Autowired
     private lateinit var webTestClient: WebTestClient
@@ -41,17 +39,17 @@ internal class TaskControllerTest {
     @Test
     fun `GET task returns array of all tasks`() {
         // setup
-        val tasks = arrayOf(createTask(id = 1), createTask(id = 2))
-        coEvery { taskService.findAll() } returns tasks.asFlow()
+        val taskDTOs = arrayOf(createTaskDTO(id = 1), createTaskDTO(id = 2))
+        coEvery { taskService.findAll() } returns taskDTOs.asFlow()
         // when
         webTestClient.get()
-                .uri("/api/task")
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                // then
-                .expectStatus().isOk
-                .expectBody<Array<Task>>()
-                .isEqualTo(tasks)
+            .uri("$controllerRequestMapping/task")
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            // then
+            .expectStatus().isOk
+            .expectBody<Array<TaskDTO>>()
+            .isEqualTo(taskDTOs)
     }
 
     @Test
@@ -60,45 +58,45 @@ internal class TaskControllerTest {
         coEvery { taskService.findAll() } returns emptyFlow()
         // when
         webTestClient.get()
-                .uri("/api/task")
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                //then
-                .expectStatus().isOk
-                .expectBody<Array<Task>>()
-                .isEqualTo(arrayOf())
+            .uri("$controllerRequestMapping/task")
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            //then
+            .expectStatus().isOk
+            .expectBody<Array<TaskDTO>>()
+            .isEqualTo(arrayOf())
     }
 
     @Test
     fun `GET task-search returns filtered tasks`() {
         // setup
-        val tasks = arrayOf(createTask(id = 1, completed = true), createTask(id = 2, completed = true))
-        coEvery { taskService.findByCompleted(true) } returns tasks.asFlow()
+        val taskDTOs = arrayOf(createTaskDTO(id = 1, completed = true), createTaskDTO(id = 2, completed = true))
+        coEvery { taskService.findByCompleted(true) } returns taskDTOs.asFlow()
         // when
         webTestClient.get()
-                .uri("/api/task/search?completed=true")
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                // then
-                .expectStatus().isOk
-                .expectBody<Array<Task>>()
-                .isEqualTo(tasks)
+            .uri("$controllerRequestMapping/task/search?completed=true")
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            // then
+            .expectStatus().isOk
+            .expectBody<Array<TaskDTO>>()
+            .isEqualTo(taskDTOs)
     }
 
     @Test
     fun `GET task-id returns existing task`() {
         // setup
-        val task = createTask(id = 1)
-        coEvery { taskService.findById(1) } returns task
+        val taskDTO = createTaskDTO(id = 1)
+        coEvery { taskService.findById(1) } returns taskDTO
         // when
         webTestClient.get()
-                .uri("/api/task/1")
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                //then
-                .expectStatus().isOk
-                .expectBody<Task>()
-                .isEqualTo(task)
+            .uri("$controllerRequestMapping/task/1")
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            //then
+            .expectStatus().isOk
+            .expectBody<TaskDTO>()
+            .isEqualTo(taskDTO)
     }
 
     @Test
@@ -107,141 +105,182 @@ internal class TaskControllerTest {
         coEvery { taskService.findById(999) } returns null
         // when
         webTestClient.get()
-                .uri("/api/task/999")
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                //then
-                .expectStatus().isNotFound
-                .expectBody<Map<String, String>>()
-                .consumeWith { assertErrorResponse(it.responseBody, "/api/task/999", HttpStatus.NOT_FOUND) }
+            .uri("$controllerRequestMapping/task/999")
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            //then
+            .expectStatus().isNotFound
+            .expectBody<Map<String, String>>()
+            .consumeWith {
+                assertErrorResponse(
+                    it.responseBody,
+                    "$controllerRequestMapping/task/999",
+                    HttpStatus.NOT_FOUND
+                )
+            }
     }
 
     @Test
     fun `GET task-id returns BAD_REQUEST if id is not a positive integer`() {
         // when
         webTestClient.get()
-                .uri("/api/task/ABC")
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                //then
-                .expectStatus().isBadRequest
-                .expectBody<Map<String, String>>()
-                .consumeWith { assertErrorResponse(it.responseBody, "/api/task/ABC", HttpStatus.BAD_REQUEST) }
+            .uri("$controllerRequestMapping/task/ABC")
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            //then
+            .expectStatus().isBadRequest
+            .expectBody<Map<String, String>>()
+            .consumeWith {
+                assertErrorResponse(
+                    it.responseBody,
+                    "$controllerRequestMapping/task/ABC",
+                    HttpStatus.BAD_REQUEST
+                )
+            }
     }
 
     @Test
     fun `POST task creates a task`() {
         // setup
-        val task = createTask(id = 999)
-        val taskDto = task.toDto()
+        val taskDTO = createTaskDTO()
         coEvery { taskService.create(any()) } answers {
-            firstArg<TaskDTO>().toModel().copy(id = 999)
+            firstArg<TaskDTO>().copy(id = 999)
         }
         // when
         webTestClient.post()
-                .uri("/api/task")
-                .body<TaskDTO>(CompletableDeferred(taskDto))
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                // then
-                .expectStatus().isOk
-                .expectBody<Task>()
-                .isEqualTo(task)
+            .uri("$controllerRequestMapping/task")
+            .body<TaskDTO>(CompletableDeferred(taskDTO))
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            // then
+            .expectStatus().isOk
+            .expectBody<TaskDTO>()
+            .isEqualTo(taskDTO.copy(id = 999))
     }
 
     @Test
     fun `POST task returns BAD_REQUEST if called with invalid body`() {
         // when
         webTestClient.post()
-                .uri("/api/task")
-                .body<TaskDTO>(CompletableDeferred(""))
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                // then
-                .expectStatus().isBadRequest
-                .expectBody<Map<String, String>>()
-                .consumeWith { assertErrorResponse(it.responseBody, "/api/task", HttpStatus.BAD_REQUEST) }
+            .uri("$controllerRequestMapping/task")
+            .body<TaskDTO>(CompletableDeferred(""))
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            // then
+            .expectStatus().isBadRequest
+            .expectBody<Map<String, String>>()
+            .consumeWith {
+                assertErrorResponse(
+                    it.responseBody,
+                    "$controllerRequestMapping/task",
+                    HttpStatus.BAD_REQUEST
+                )
+            }
     }
 
     @Test
     fun `POST task returns INTERNAL_SERVER_ERROR if save fails`() {
         // setup
-        val taskDTO = createTask(id = 999).toDto()
+        val taskDTO = createTaskDTO()
         coEvery { taskService.create(any()) } throws IllegalArgumentException("save failed due to a mocked error")
         // when
         webTestClient.post()
-                .uri("/api/task")
-                .body<TaskDTO>(CompletableDeferred(taskDTO))
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                // then
-                .expectStatus().isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR)
-                .expectBody<Map<String, String>>()
-                .consumeWith { assertErrorResponse(it.responseBody, "/api/task", HttpStatus.INTERNAL_SERVER_ERROR) }
+            .uri("$controllerRequestMapping/task")
+            .body<TaskDTO>(CompletableDeferred(taskDTO))
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            // then
+            .expectStatus().isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR)
+            .expectBody<Map<String, String>>()
+            .consumeWith {
+                assertErrorResponse(
+                    it.responseBody,
+                    "$controllerRequestMapping/task",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+                )
+            }
     }
 
     @Test
     fun `PUT task-id updates an existing task`() {
         // setup
-        val task = createTask(id = 2, description = "task update")
-        val taskDTO = task.toDto()
-        coEvery { taskService.update(any(), any()) } answers {
-            secondArg<TaskDTO>().toModel(firstArg<Long>())
+        val taskDTO = createTaskDTO(description = "task update")
+        val taskDTOWithId = taskDTO.copy(id=2)
+        coEvery { taskService.update(any()) } answers {
+            firstArg<TaskDTO>().copy()
         }
         // when
         webTestClient.put()
-                .uri("/api/task/2")
-                .body<TaskDTO>(CompletableDeferred(taskDTO))
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                // then
-                .expectStatus().isOk
-                .expectBody<Task>()
-                .isEqualTo(task)
+            .uri("$controllerRequestMapping/task/2")
+            .body<TaskDTO>(CompletableDeferred(taskDTO))
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            // then
+            .expectStatus().isOk
+            .expectBody<TaskDTO>()
+            .isEqualTo(taskDTOWithId)
     }
 
     @Test
     fun `PUT task-id returns BAD_REQUEST if id not a positive integer`() {
         // when
         webTestClient.put()
-                .uri("/api/task/ABC")
-                .body<TaskDTO>(CompletableDeferred(createTask().toDto()))
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                // then
-                .expectStatus().isBadRequest
-                .expectBody<Map<String, String>>()
-                .consumeWith { assertErrorResponse(it.responseBody, "/api/task/ABC", HttpStatus.BAD_REQUEST) }
+            .uri("$controllerRequestMapping/task/ABC")
+            .body<TaskDTO>(CompletableDeferred(createTaskDTO()))
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            // then
+            .expectStatus().isBadRequest
+            .expectBody<Map<String, String>>()
+            .consumeWith {
+                assertErrorResponse(
+                    it.responseBody,
+                    "$controllerRequestMapping/task/ABC",
+                    HttpStatus.BAD_REQUEST
+                )
+            }
     }
 
     @Test
     fun `PUT task-id returns BAD_REQUEST if called with invalid body`() {
         // when
         webTestClient.put()
-                .uri("/api/task/2")
-                .body<TaskDTO>(CompletableDeferred(""))
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                // then
-                .expectStatus().isBadRequest
-                .expectBody<Map<String, String>>()
-                .consumeWith { assertErrorResponse(it.responseBody, "/api/task/2", HttpStatus.BAD_REQUEST) }
+            .uri("$controllerRequestMapping/task/2")
+            .body<TaskDTO>(CompletableDeferred(""))
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            // then
+            .expectStatus().isBadRequest
+            .expectBody<Map<String, String>>()
+            .consumeWith {
+                assertErrorResponse(
+                    it.responseBody,
+                    "$controllerRequestMapping/task/2",
+                    HttpStatus.BAD_REQUEST
+                )
+            }
     }
 
     @Test
     fun `PUT task-id returns NOT_FOUND for nonexistent task`() {
         // setup
-        coEvery { taskService.update(999, any()) } returns null
+        coEvery { taskService.update(any()) } returns null
         // when
         webTestClient.put()
-                .uri("/api/task/999")
-                .body<TaskDTO>(CompletableDeferred(createTask().toDto()))
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                // then
-                .expectStatus().isNotFound
-                .expectBody<Map<String, String>>()
-                .consumeWith { assertErrorResponse(it.responseBody, "/api/task/999", HttpStatus.NOT_FOUND) }
+            .uri("$controllerRequestMapping/task/999")
+            .body<TaskDTO>(CompletableDeferred(createTaskDTO()))
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            // then
+            .expectStatus().isNotFound
+            .expectBody<Map<String, String>>()
+            .consumeWith {
+                assertErrorResponse(
+                    it.responseBody,
+                    "$controllerRequestMapping/task/999",
+                    HttpStatus.NOT_FOUND
+                )
+            }
     }
 
     @Test
@@ -251,15 +290,15 @@ internal class TaskControllerTest {
         coEvery { userService.getCurrentUser() } returns "mock of current user"
         // when
         webTestClient.delete()
-                .uri("/api/task/2")
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                // then
-                .expectStatus().isNoContent
-                .expectBody<Any>()
-                .consumeWith { result ->
-                    assertThat(result.responseBody).isNull()
-                }
+            .uri("$controllerRequestMapping/task/2")
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            // then
+            .expectStatus().isNoContent
+            .expectBody<Any>()
+            .consumeWith { result ->
+                assertThat(result.responseBody).isNull()
+            }
     }
 
     @Test
@@ -269,13 +308,19 @@ internal class TaskControllerTest {
         coEvery { userService.getCurrentUser() } returns "mock of current user"
         // when
         webTestClient.delete()
-                .uri("/api/task/2")
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                // then
-                .expectStatus().isNotFound
-                .expectBody<Map<String, String>>()
-                .consumeWith { assertErrorResponse(it.responseBody, "/api/task/2", HttpStatus.NOT_FOUND) }
+            .uri("$controllerRequestMapping/task/2")
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            // then
+            .expectStatus().isNotFound
+            .expectBody<Map<String, String>>()
+            .consumeWith {
+                assertErrorResponse(
+                    it.responseBody,
+                    "$controllerRequestMapping/task/2",
+                    HttpStatus.NOT_FOUND
+                )
+            }
     }
 
     @Test
@@ -285,13 +330,19 @@ internal class TaskControllerTest {
         coEvery { userService.getCurrentUser() } returns "mock of current user"
         // when
         webTestClient.delete()
-                .uri("/api/task/ABC")
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                // then
-                .expectStatus().isBadRequest
-                .expectBody<Map<String, String>>()
-                .consumeWith { assertErrorResponse(it.responseBody, "/api/task/ABC", HttpStatus.BAD_REQUEST) }
+            .uri("$controllerRequestMapping/task/ABC")
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            // then
+            .expectStatus().isBadRequest
+            .expectBody<Map<String, String>>()
+            .consumeWith {
+                assertErrorResponse(
+                    it.responseBody,
+                    "$controllerRequestMapping/task/ABC",
+                    HttpStatus.BAD_REQUEST
+                )
+            }
     }
 
     private fun assertErrorResponse(apiError: Map<String, String>?, path: String, httpStatus: HttpStatus) {

@@ -1,6 +1,6 @@
 package org.taskmanager.task.repository
 
-import org.taskmanager.task.model.Task
+import org.taskmanager.task.domain.Task
 import kotlinx.coroutines.flow.Flow
 import org.springframework.data.r2dbc.repository.Query
 import org.springframework.data.repository.kotlin.CoroutineCrudRepository

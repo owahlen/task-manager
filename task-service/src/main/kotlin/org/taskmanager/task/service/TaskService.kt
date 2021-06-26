@@ -1,27 +1,34 @@
 package org.taskmanager.task.service
 
-import org.taskmanager.task.model.Task
-import org.taskmanager.task.model.TaskDTO
-import org.taskmanager.task.model.toModel
+import kotlinx.coroutines.flow.map
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import org.taskmanager.task.repository.TaskRepository
+import org.taskmanager.task.service.dto.TaskDTO
+import org.taskmanager.task.service.mapper.toTask
+import org.taskmanager.task.service.mapper.toTaskDTO
 
 @Service
 class TaskService(private val taskRepository: TaskRepository) {
 
-    fun findAll() = taskRepository.findAll()
-    suspend fun findById(id: Long) = taskRepository.findById(id)
-    fun findByDescription(description: String) = taskRepository.findByDescriptionContainingIgnoreCase(description)
-    fun findByCompleted(completed: Boolean) = taskRepository.findByCompleted(completed)
-    suspend fun create(task: TaskDTO) = taskRepository.save(task.toModel())
+    fun findAll() = taskRepository.findAll().map { it.toTaskDTO() }
+    suspend fun findById(id: Long) = taskRepository.findById(id)?.toTaskDTO()
+    fun findByDescription(description: String) =
+        taskRepository.findByDescriptionContainingIgnoreCase(description).map { it.toTaskDTO() }
 
-    suspend fun update(id: Long, taskDTO: TaskDTO): Task? {
-        if(findById(id)==null) return null
-        return taskRepository.save(taskDTO.toModel(withId = id))
+    fun findByCompleted(completed: Boolean) = taskRepository.findByCompleted(completed).map { it.toTaskDTO() }
+    suspend fun create(taskDTO: TaskDTO) = taskRepository.save(taskDTO.toTask()).toTaskDTO()
+
+    @Transactional
+    suspend fun update(taskDTO: TaskDTO): TaskDTO? {
+        val id = taskDTO.id!!
+        if (findById(id) == null) return null
+        return taskRepository.save(taskDTO.copy(id = id).toTask()).toTaskDTO()
     }
 
+    @Transactional
     suspend fun delete(id: Long): Boolean {
-        if(findById(id)==null) return false
+        if (findById(id) == null) return false
         taskRepository.deleteById(id)
         return true
     }
