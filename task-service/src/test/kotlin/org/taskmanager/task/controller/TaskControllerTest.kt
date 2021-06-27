@@ -15,14 +15,14 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.body
 import org.springframework.test.web.reactive.server.expectBody
-import org.taskmanager.task.configuration.ApiSecurityConfiguration
+import org.taskmanager.task.configuration.SecurityConfiguration
 import org.taskmanager.task.createTaskDTO
 import org.taskmanager.task.service.TaskService
 import org.taskmanager.task.service.UserService
 import org.taskmanager.task.service.dto.TaskDTO
 
 @WebFluxTest(TaskController::class)
-@Import(ApiSecurityConfiguration::class)
+@Import(SecurityConfiguration::class)
 internal class TaskControllerTest {
 
     private val controllerRequestMapping = "/api/v1"

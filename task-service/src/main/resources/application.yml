@@ -9,6 +9,10 @@ server:
         include-binding-errors: never
         include-message: always
 
+security:
+    jwt:
+        secret: ThisIsAVerySecretSecret0123456789
+
 spring:
     r2dbc:
         password: example
