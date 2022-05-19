@@ -1,0 +1,168 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 01-create-person-table
+      author: owahlen
+      changes:
+        - createTable:
+            schema: public
+            tableName: person
+            columns:
+              - column:
+                  name: id
+                  type: int
+                  autoIncrement: true
+                  startWith: 100
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: version
+                  type: int
+                  defaultValue: 1
+                  constraints:
+                    nullable: false
+              - column:
+                  name: first_name
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_name
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_date
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_modified_date
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 02-create-item-table
+      author: owahlen
+      changes:
+        - createTable:
+            schema: public
+            tableName: item
+            columns:
+              - column:
+                  name: id
+                  type: int
+                  autoIncrement: true
+                  startWith: 100
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: version
+                  type: int
+                  defaultValue: 1
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(15)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: varchar(4000)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: assignee_id
+                  type: int
+                  constraints:
+                    foreignKeyName: fk_item_assignee_id
+                    references: person(id)
+              - column:
+                  name: created_date
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_modified_date
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 03-create-tag-table
+      author: owahlen
+      changes:
+        - createTable:
+            schema: public
+            tableName: tag
+            columns:
+              - column:
+                  name: id
+                  type: int
+                  autoIncrement: true
+                  startWith: 100
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: version
+                  type: int
+                  defaultValue: 1
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_date
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_modified_date
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 04-create-item-tag-table
+      author: owahlen
+      changes:
+        - createTable:
+            schema: public
+            tableName: item_tag
+            columns:
+              - column:
+                  name: id
+                  type: int
+                  autoIncrement: true
+                  startWith: 100
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: item_id
+                  type: int
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_item_tag_item_id
+                    references: item(id)
+              - column:
+                  name: tag_id
+                  type: int
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_item_tag_tag_id_
+                    references: tag(id)

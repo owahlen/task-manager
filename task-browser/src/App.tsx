@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {BrowserRouter as Router, Link, Route, Switch} from 'react-router-dom';
+import {BrowserRouter as Router, Link, Route, Routes} from 'react-router-dom';
 import "bootstrap/dist/css/bootstrap.min.css";
 import './App.css';
 import TaskList from "./components/task-list.component";
@@ -33,11 +33,12 @@ class App extends Component {
                     </nav>
 
                     <div className="container mt-3">
-                        <Switch>
-                            <Route exact path={["/", "/task"]} component={TaskList}/>
-                            <Route exact path="/add" component={AddTask}/>
-                            <Route path="/task/:id" component={TaskItem}/>
-                        </Switch>
+                        <Routes>
+                            <Route exact path="/" element={<TaskList/>}/>
+                            <Route exact path="/task" element={<TaskList/>}/>
+                            <Route exact path="/add" element={<AddTask/>}/>
+                            <Route path="/task/:id" element={<TaskItem/>}/>
+                        </Routes>
                     </div>
 
                 </div>

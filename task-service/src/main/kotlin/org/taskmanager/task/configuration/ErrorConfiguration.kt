@@ -18,14 +18,19 @@ import javax.validation.ValidatorFactory
 class ErrorConfiguration {
 
     /**
-     * Use the default strategy for sending JSON errors but never send the string "null" as message
+     * Use the default strategy for sending JSON errors
+     * but never send the string "null" as message and hide messages of Internal Server Errors (HttpStatus 500)
      */
     @Bean
     fun apiErrorAttributes() = object : DefaultErrorAttributes() {
-        override fun getErrorAttributes(request: ServerRequest, options: ErrorAttributeOptions): MutableMap<String, Any> {
+        override fun getErrorAttributes(
+            request: ServerRequest,
+            options: ErrorAttributeOptions
+        ): MutableMap<String, Any> {
             val errorAttributes = super.getErrorAttributes(request, options)
-            if (errorAttributes.get("message") == null) {
-                errorAttributes.put("message", "")
+            if (errorAttributes["message"] == null || errorAttributes["status"] == 500) {
+                // hide messages from Internal Server Errors
+                errorAttributes["message"] = ""
             }
             return errorAttributes
         }
@@ -45,14 +50,17 @@ class ErrorConfiguration {
                         return super.interpolate(message, context, Locale.US)
                     }
 
-                    override fun interpolate(message: String, context: MessageInterpolator.Context, locale: Locale): String {
+                    override fun interpolate(
+                        message: String,
+                        context: MessageInterpolator.Context,
+                        locale: Locale
+                    ): String {
                         return super.interpolate(message, context, Locale.US)
                     }
                 })
             }
         }
     }
-
 
     @Bean
     fun validationPostProcessor() = MethodValidationPostProcessor()

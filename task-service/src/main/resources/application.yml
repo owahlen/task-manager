@@ -3,17 +3,40 @@ logging:
         root: INFO
         org.springframework.security: INFO
         org.springframework.data.r2dbc: DEBUG
+        io.r2dbc.postgresql.QUERY: DEBUG # for queries
+        io.r2dbc.postgresql.PARAM: DEBUG # for parameters
+        org.springframework.web: INFO
+        liquibase: INFO
 
 server:
     error:
         include-binding-errors: never
         include-message: always
 
+# common database configuration for service and liquibase
+database:
+    name: taskmanager
+    host: localhost
+    port: 5432
+    username: postgres
+    password: password
+
 spring:
     r2dbc:
-        password: example
-        url: r2dbc:postgresql://localhost/postgres
-        username: postgres
+        username: ${database.username}
+        password: ${database.password}
+        url: r2dbc:postgresql://${database.host}:${database.port}/${database.name}?sslmode=disable
+        # pool.initialSize=5
+        # pool.maxSize=5
+
+    liquibase:
+        change-log: classpath:/db/changelog/db.changelog-master.yaml
+        user: ${database.username}
+        password: ${database.password}
+        url: jdbc:postgresql://${database.host}:${database.port}/${database.name}?sslmode=disable
+
+    webflux:
+        base-path: /api/v1
 
 springdoc:
     api-docs:
