@@ -1,7 +1,6 @@
 package org.taskmanager.task.api.resource
 
 import org.taskmanager.task.model.ItemStatus
-import org.taskmanager.task.model.Tag
 import java.time.LocalDateTime
 
 data class ItemResource(
@@ -10,7 +9,7 @@ data class ItemResource(
     var description: String? = null,
     var status: ItemStatus? = null,
     var assignee: PersonResource? = null,
-    var tags: List<TagResource>,
+    var tags: List<TagResource>? = null,
     val createdDate: LocalDateTime? = null,
     val lastModifiedDate: LocalDateTime? = null
 )

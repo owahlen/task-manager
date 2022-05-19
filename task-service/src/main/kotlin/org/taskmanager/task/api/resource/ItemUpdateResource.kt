@@ -15,5 +15,5 @@ data class ItemUpdateResource(
 
     var assigneeId: Long? = null,
 
-    var tagIds: Set<Long>,
+    var tagIds: Set<Long>? = null,
 )

@@ -24,7 +24,7 @@ fun ItemResource.toItem() = Item(
     status = this.status ?: ItemStatus.TODO,
     assigneeId = this.assignee?.id,
     assignee = this.assignee?.toPerson(),
-    tags = this.tags.map { it.toTag() },
+    tags = this.tags?.map { it.toTag() },
     createdDate = this.createdDate,
     lastModifiedDate = this.lastModifiedDate
 )
@@ -32,7 +32,7 @@ fun ItemResource.toItem() = Item(
 fun ItemCreateResource.toItem() = Item(
     description = this.description,
     assigneeId = this.assigneeId,
-    tags = this.tagIds.map { Tag(id = it) }
+    tags = this.tagIds?.map { Tag(id = it) }
 )
 
 fun ItemUpdateResource.toItem(id: Long, version: Long?) = Item(
@@ -40,7 +40,7 @@ fun ItemUpdateResource.toItem(id: Long, version: Long?) = Item(
     version = version,
     description = this.description,
     assigneeId = this.assigneeId,
-    tags = this.tagIds.map { Tag(id = it) }
+    tags = this.tagIds?.map { Tag(id = it) }
 )
 
 fun ItemPatchResource.toItem(item: Item) = Item(
