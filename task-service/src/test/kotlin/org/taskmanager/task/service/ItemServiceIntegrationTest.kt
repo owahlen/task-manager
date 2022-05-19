@@ -7,6 +7,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
+import org.springframework.data.domain.Sort.Order
 import org.springframework.test.annotation.DirtiesContext
 import org.taskmanager.task.model.Item
 import org.taskmanager.task.model.ItemStatus
@@ -18,10 +21,13 @@ import org.taskmanager.task.model.Tag
 class ItemServiceIntegrationTest(@Autowired val itemService: ItemService) {
 
     @Test
-    fun `test findAll is ordered by lastModifiedDate`() {
+    fun `test findAllBy pageable returns page of items`() {
         runBlocking {
+            // setup
+            val sort = Sort.by(Order.by("lastModifiedDate"))
+            val pageable = PageRequest.of(0, 100, sort)
             // when
-            val items = itemService.findAll().toList()
+            val items = itemService.findAllBy(pageable).toList()
             // then
             assertThat(items.count()).isGreaterThan(2)
             val sortedItems = items.sortedBy { it.lastModifiedDate }

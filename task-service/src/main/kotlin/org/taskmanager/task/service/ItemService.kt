@@ -1,8 +1,9 @@
 package org.taskmanager.task.service
 
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
-import org.springframework.data.domain.Sort
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.taskmanager.task.exception.ItemNotFoundException
@@ -24,20 +25,40 @@ class ItemService(
     private val tagRepository: TagRepository
 ) {
 
-    // Note that the name of the fields to be sorted on are the DB field names
-    private val DEFAULT_SORT: Sort = Sort.by(Sort.Order.by("lastModifiedDate"))
+    /**
+     * Get a page of items
+     * @param pageable page definition
+     * @return Page of items
+     */
+    suspend fun findAllBy(pageable: Pageable): Page<Item> {
+        val dataPage = itemRepository.findAllBy(pageable).toList()
+        val total = itemRepository.count()
+        return PageImpl(dataPage, pageable, total)
+    }
 
     /**
-     * Find all items
-     * @return Find all items with the related objects loaded
+     * Get an item with version check
+     * @param id            id of the item
+     * @param version       expected version to be retrieved
+     * @param loadRelations true if the related objects must also be retrieved
+     * @return the currently stored item
      */
-    fun findAll() = itemRepository.findAll(DEFAULT_SORT).map(::loadRelations)
+    suspend fun getById(id: Long, version: Long? = null, loadRelations: Boolean = false): Item {
+        val item = itemRepository.findById(id) ?: throw ItemNotFoundException(id)
+        if (version != null && version != item.version) {
+            // Optimistic locking: pre-check
+            throw UnexpectedItemVersionException(version, item.version!!)
+        }
+        // Load the related objects, if requested
+        return item.also {
+            if (loadRelations) populateRelations(it)
+        }
+    }
 
     /**
      * Create a new item
-     * @param item Item to be created
-     *
-     * @return the saved item without the related entities
+     * @param item item to be created
+     * @return the created item without the related entities
      */
     @Transactional
     suspend fun create(item: Item): Item {
@@ -51,20 +72,21 @@ class ItemService(
     }
 
     /**
-     * Update an Item
-     * @param itemToSave item to be saved
+     * Update an item with version check
+     * @param item item to be saved
      * @return the saved item without the related entities
      */
     @Transactional
-    suspend fun update(itemToSave: Item): Item {
-        if (itemToSave.id == null || itemToSave.version == null) {
+    suspend fun update(item: Item): Item {
+        if (item.id == null || item.version == null) {
             throw IllegalArgumentException("When updating an item, the id and the version must be provided")
         }
-        // verify the item with id and version exists.
-        getById(itemToSave.id, itemToSave.version, false)
+        // verify that the item with id exists and if version!=null then check that it matches
+        val storedItem = getById(item.id, item.version, false)
+        val itemToSave = item.copy(version = storedItem.version, createdDate = storedItem.createdDate)
 
         // find the existing item-tag mappings
-        val currentItemTags = itemTagRepository.findAllByItemId(itemToSave.id).toList()
+        val currentItemTags = itemTagRepository.findAllByItemId(itemToSave.id!!).toList()
 
         // Remove and add the links to the tags
         // As R2DBC does not support embedded IDs, the ItemTag entity has a technical key
@@ -81,49 +103,32 @@ class ItemService(
         return itemRepository.save(itemToSave)
     }
 
+    /**
+     * Delete an item with version check
+     * This method transitively deletes item-tags of the item
+     * @param id id of the item to be deleted
+     * @param version if not null check that version matches the version of the currently stored item
+     */
     @Transactional
-    suspend fun deleteById(id: Long, version: Long?) {
+    suspend fun deleteById(id: Long, version: Long? = null) {
+        // check that item with this id exists
         val item = getById(id, version, false)
         itemTagRepository.deleteAllByItemId(id)
         itemRepository.delete(item)
     }
 
     /**
-     * Get an item
-     *
-     * @param id            identifier of the item
-     * @param version       expected version to be retrieved
-     * @param loadRelations true if the related objects must also be retrieved
-     *
-     * @return the item
-     */
-    suspend fun getById(id: Long, version: Long? = null, loadRelations: Boolean = false): Item {
-        val item = itemRepository.findById(id)?:throw ItemNotFoundException(id)
-        if (version != null && version != item.version) {
-            // Optimistic locking: pre-check
-            throw UnexpectedItemVersionException(version, item.version!!)
-        }
-        // Load the related objects, if requested
-        return item.also {
-            if (loadRelations) loadRelations(it)
-        }
-    }
-
-    /**
-     * Load the objects related to an item
+     * Populate the tags and assignee related to an item
      * @param item Item
      * @return The items with the loaded related objects (assignee, tags)
      */
-    private suspend fun loadRelations(item: Item): Item {
-
+    private suspend fun populateRelations(item: Item) {
         // Load the tags
         item.tags = tagRepository.findTagsByItemId(item.id!!).toList()
 
         // Load the assignee (if set)
         val assigneeId = item.assigneeId
         if (assigneeId != null) item.assignee = personRepository.findById(assigneeId)
-
-        return item
     }
 
 }

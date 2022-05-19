@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
+import org.springframework.data.domain.Sort.Order
 import org.springframework.test.annotation.DirtiesContext
 import org.taskmanager.task.api.resource.PersonCreateResource
 import org.taskmanager.task.api.resource.PersonUpdateResource
@@ -25,7 +26,7 @@ class PersonServiceIntegrationTest(@Autowired val personService: PersonService) 
     fun `test findAllBy pageable returns page of persons`() {
         runBlocking {
             // setup
-            val sort = Sort.by(Sort.Order.by("firstName"), Sort.Order.by("lastName"))
+            val sort = Sort.by(Order.by("firstName"), Order.by("lastName"))
             val pageable = PageRequest.of(0, 100, sort)
             // when
             val persons = personService.findAllBy(pageable).toList()

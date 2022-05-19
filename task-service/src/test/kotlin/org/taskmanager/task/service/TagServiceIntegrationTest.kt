@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
+import org.springframework.data.domain.Sort.Order
 import org.springframework.test.annotation.DirtiesContext
 import org.taskmanager.task.api.resource.TagCreateResource
 import org.taskmanager.task.api.resource.TagUpdateResource
@@ -25,7 +26,7 @@ class TagServiceIntegrationTest(@Autowired val tagService: TagService) {
     fun `test findAllBy pageable returns page of tags`() {
         runBlocking {
             // setup
-            val sort = Sort.by(Sort.Order.by("name"))
+            val sort = Sort.by(Order.by("name"))
             val pageable = PageRequest.of(0, 100, sort)
             // when
             val tags = tagService.findAllBy(pageable).toList()
