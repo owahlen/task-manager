@@ -7,19 +7,22 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment
+import org.springframework.core.ParameterizedTypeReference
+import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.domain.Sort.Order
 import org.springframework.http.MediaType
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.web.reactive.server.WebTestClient
-import org.taskmanager.task.api.resource.ItemCreateResource
-import org.taskmanager.task.api.resource.ItemPatchResource
-import org.taskmanager.task.api.resource.ItemResource
-import org.taskmanager.task.api.resource.ItemUpdateResource
+import org.taskmanager.task.api.resource.*
 import org.taskmanager.task.exception.ItemNotFoundException
 import org.taskmanager.task.mapper.toItemResource
+import org.taskmanager.task.mapper.toPersonResource
+import org.taskmanager.task.mapper.toTagResource
 import org.taskmanager.task.model.Item
+import org.taskmanager.task.model.ItemStatus
+import org.taskmanager.task.model.Tag
 import org.taskmanager.task.service.ItemService
 import java.util.*
 
@@ -33,7 +36,7 @@ class ItemControllerIntegrationTest(
 ) {
 
     private val DEFAULT_PAGEABLE =
-        PageRequest.of(0, 100, Sort.by(Order.by("lastModifiedDate")))
+        PageRequest.of(0, 100, Sort.by(Order.by("lastModifiedDate"), Order.by("description")))
 
     @Test
     fun `test get item page`() {
@@ -49,8 +52,15 @@ class ItemControllerIntegrationTest(
                 .exchange()
                 // then
                 .expectStatus().isOk
-                .expectBody()
-                .jsonPath("$.content[0].firstName").isNotEmpty
+                .expectBody(object : ParameterizedTypeReference<Page<ItemResource>>() {})
+                .value {
+                    assertThat(it.totalPages).isGreaterThan(0)
+                    assertThat(it.totalElements).isGreaterThan(0)
+                    assertThat(it.number).isEqualTo(DEFAULT_PAGEABLE.pageNumber)
+                    assertThat(it.size).isEqualTo(DEFAULT_PAGEABLE.pageSize)
+                    assertThat(it.sort).isEqualTo(DEFAULT_PAGEABLE.sort)
+                    assertThat(it.content).isEqualTo(expectedItemResources)
+                }
         }
     }
 
@@ -106,13 +116,34 @@ class ItemControllerIntegrationTest(
                 .exchange()
                 // then
                 .expectStatus().isOk
-                .expectBody()
-                .jsonPath("$.id").isNumber
-                .jsonPath("$.version").isNumber
-                .jsonPath("$.firstName").isEqualTo("John")
-                .jsonPath("$.lastName").isEqualTo("Doe")
-                .jsonPath("$.createdDate").isNotEmpty
-                .jsonPath("$.lastModifiedDate").isNotEmpty
+                .expectBody(ItemResource::class.java)
+                .value {
+                    assertThat(it.id).isNotNull
+                    assertThat(it.version).isNotNull
+                    assertThat(it.description).isEqualTo("do homework")
+                    assertThat(it.status).isEqualTo(ItemStatus.TODO)
+                    val assignee = it.assignee
+                    assertThat(assignee).isNotNull
+                    assertThat(assignee!!.id).isEqualTo(1)
+                    assertThat(assignee.version).isNotNull
+                    assertThat(assignee.firstName).isNotBlank
+                    assertThat(assignee.lastName).isNotBlank
+                    assertThat(assignee.createdDate).isNotNull
+                    assertThat(assignee.lastModifiedDate).isNotNull
+                    val tags = it.tags?.sortedBy { it.id }
+                    assertThat(tags).isNotNull
+                    assertThat(tags!!.size).isEqualTo(2)
+                    assertThat(tags[0].id).isEqualTo(1)
+                    assertThat(tags[0].version).isNotNull
+                    assertThat(tags[0].name).isNotBlank
+                    assertThat(tags[0].createdDate).isNotNull
+                    assertThat(tags[0].lastModifiedDate).isNotNull
+                    assertThat(tags[1].id).isEqualTo(2)
+                    assertThat(tags[1].version).isNotNull
+                    assertThat(tags[1].name).isNotBlank
+                    assertThat(tags[1].createdDate).isNotNull
+                    assertThat(tags[1].lastModifiedDate).isNotNull
+                }
         }
     }
 
@@ -142,8 +173,14 @@ class ItemControllerIntegrationTest(
     fun `test updating a item`() {
         runBlocking {
             // setup
+            val originalItem = itemService.getById(2) // ensure item with id 3 exists
             val itemUpdateResource =
-                ItemUpdateResource(description = "do homework", assigneeId = 1, tagIds = setOf(1, 2))
+                ItemUpdateResource(
+                    description = "do homework",
+                    status = ItemStatus.DONE,
+                    assigneeId = 1,
+                    tagIds = setOf(1, 2)
+                )
             // when
             webTestClient.put()
                 .uri("/item/2")
@@ -153,7 +190,34 @@ class ItemControllerIntegrationTest(
                 .expectStatus().isOk
                 .expectBody(ItemResource::class.java)
                 .value {
-                    assertThat(it.description).isEqualTo(itemUpdateResource.description)
+                    assertThat(it.id).isEqualTo(2)
+                    assertThat(it.version).isNotNull
+                    assertThat(it.version).isEqualTo(originalItem.version!! + 1)
+                    assertThat(it.description).isEqualTo("do homework")
+                    assertThat(it.status).isEqualTo(ItemStatus.DONE)
+                    val assignee = it.assignee
+                    assertThat(assignee).isNotNull
+                    assertThat(assignee!!.id).isEqualTo(1)
+                    assertThat(assignee.version).isNotNull
+                    assertThat(assignee.firstName).isNotBlank
+                    assertThat(assignee.lastName).isNotBlank
+                    assertThat(assignee.createdDate).isNotNull
+                    assertThat(assignee.lastModifiedDate).isNotNull
+                    val tags = it.tags?.sortedBy { it.id }
+                    assertThat(tags).isNotNull
+                    assertThat(tags!!.size).isEqualTo(2)
+                    assertThat(tags[0].id).isEqualTo(1)
+                    assertThat(tags[0].version).isNotNull
+                    assertThat(tags[0].name).isNotBlank
+                    assertThat(tags[0].createdDate).isNotNull
+                    assertThat(tags[0].lastModifiedDate).isNotNull
+                    assertThat(tags[1].id).isEqualTo(2)
+                    assertThat(tags[1].version).isNotNull
+                    assertThat(tags[1].name).isNotBlank
+                    assertThat(tags[1].createdDate).isNotNull
+                    assertThat(tags[1].lastModifiedDate).isNotNull
+                    assertThat(it.createdDate).isEqualTo(originalItem.createdDate)
+                    assertThat(it.lastModifiedDate).isNotNull
                 }
         }
     }
@@ -162,7 +226,7 @@ class ItemControllerIntegrationTest(
     fun `test patching a item`() {
         runBlocking {
             // setup
-            val loadedItemResource = itemService.getById(3).toItemResource()
+            val originalItem = itemService.getById(3, null, true) // ensure item with id 3 exists
             val itemPatchResource =
                 ItemPatchResource(
                     description = Optional.of("sleep"),
@@ -179,7 +243,17 @@ class ItemControllerIntegrationTest(
                 .expectStatus().isOk
                 .expectBody(ItemResource::class.java)
                 .value {
+                    assertThat(it.id).isEqualTo(3)
+                    assertThat(it.version).isNotNull
+                    assertThat(it.version).isEqualTo(originalItem.version!! + 1)
                     assertThat(it.description).isEqualTo("sleep")
+                    assertThat(it.status).isEqualTo(originalItem.status)
+                    assertThat(it.assignee).isEqualTo(originalItem.assignee?.toPersonResource())
+                    val tagResources = it.tags?.sortedBy(TagResource::id)
+                    val originalItemTagResources = originalItem.tags?.map(Tag::toTagResource)?.sortedBy(TagResource::id)
+                    assertThat(tagResources).isEqualTo(originalItemTagResources)
+                    assertThat(it.createdDate).isEqualTo(originalItem.createdDate)
+                    assertThat(it.lastModifiedDate).isNotNull
                 }
         }
     }

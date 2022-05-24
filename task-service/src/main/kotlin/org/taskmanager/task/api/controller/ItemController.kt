@@ -30,7 +30,7 @@ class ItemController(private val itemService: ItemService) {
     )
     @GetMapping(produces = [APPLICATION_JSON_VALUE])
     suspend fun getAllItems(
-        @PageableDefault(value = 100, sort = ["firstName", "lastName"], direction = Sort.Direction.ASC)
+        @PageableDefault(value = 100, sort = ["lastModifiedDate", "description"], direction = Sort.Direction.ASC)
         pageable: Pageable
     ): Page<ItemResource> {
         return itemService.findAllBy(pageable).map(Item::toItemResource)
@@ -84,7 +84,7 @@ class ItemController(private val itemService: ItemService) {
         @RequestHeader(value = HttpHeaders.IF_MATCH) version: Long?,
         @Valid @RequestBody itemPatchResource: ItemPatchResource
     ): ItemResource {
-        val item = itemService.getById(id, version)
+        val item = itemService.getById(id, version, true)
         return itemService.update(itemPatchResource.toItem(item)).toItemResource()
     }
 

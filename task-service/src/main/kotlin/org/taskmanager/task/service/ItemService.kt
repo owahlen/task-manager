@@ -1,5 +1,6 @@
 package org.taskmanager.task.service
 
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
@@ -31,7 +32,7 @@ class ItemService(
      * @return Page of items
      */
     suspend fun findAllBy(pageable: Pageable): Page<Item> {
-        val dataPage = itemRepository.findAllBy(pageable).toList()
+        val dataPage = itemRepository.findAllBy(pageable).map(::populateRelations).toList()
         val total = itemRepository.count()
         return PageImpl(dataPage, pageable, total)
     }
@@ -65,9 +66,15 @@ class ItemService(
         if (item.id != null || item.version != null) {
             throw IllegalArgumentException("When creating an item, the id and the version must be null")
         }
-        return itemRepository.save(item).also { savedItem ->
-            item.tags?.map { tag -> ItemTag(savedItem.id!!, tag.id) }
-                ?.let { itemTags -> itemTagRepository.saveAll(itemTags) }
+        val savedItem = itemRepository.save(item)
+        item.tags?.map { tag ->
+            ItemTag(itemId = savedItem.id!!, tagId = tag.id)
+        }?.forEach {
+            // Note: saveAll does not work with R2DBC therefore each itemTag is saved, individually
+            itemTagRepository.save(it)
+        }
+        return savedItem.also {
+            populateRelations(savedItem)
         }
     }
 
@@ -78,8 +85,8 @@ class ItemService(
      */
     @Transactional
     suspend fun update(item: Item): Item {
-        if (item.id == null || item.version == null) {
-            throw IllegalArgumentException("When updating an item, the id and the version must be provided")
+        if (item.id == null) {
+            throw IllegalArgumentException("When updating an item, the id must be provided")
         }
         // verify that the item with id exists and if version!=null then check that it matches
         val storedItem = getById(item.id, item.version, false)
@@ -94,13 +101,22 @@ class ItemService(
         val existingTagIds = currentItemTags.map(ItemTag::tagId)
         val tagIdsToSave = itemToSave.tags?.map(Tag::id) ?: listOf()
         // Item Tags to be deleted
-        val removedItemTags = currentItemTags.filter { !tagIdsToSave.contains(it.id) }
+        val removedItemTags = currentItemTags.filter {
+            !tagIdsToSave.contains(it.tagId)
+        }
         // Item Tags to be inserted
-        val addedItemTags = tagIdsToSave.filter { !existingTagIds.contains(it) }.map { ItemTag(itemToSave.id, it) }
+        val addedItemTags = tagIdsToSave.filter { !existingTagIds.contains(it) }.map {
+            ItemTag(itemId = itemToSave.id, tagId = it)
+        }
         itemTagRepository.deleteAll(removedItemTags)
-        itemTagRepository.saveAll(addedItemTags)
+        addedItemTags.forEach {
+            // Note: saveAll does not work with R2DBC therefore each itemTag is saved, individually
+            itemTagRepository.save(it)
+        }
         // Save the item
-        return itemRepository.save(itemToSave)
+        return itemRepository.save(itemToSave).also {
+            populateRelations(it)
+        }
     }
 
     /**
@@ -122,13 +138,15 @@ class ItemService(
      * @param item Item
      * @return The items with the loaded related objects (assignee, tags)
      */
-    private suspend fun populateRelations(item: Item) {
+    private suspend fun populateRelations(item: Item): Item {
         // Load the tags
         item.tags = tagRepository.findTagsByItemId(item.id!!).toList()
 
         // Load the assignee (if set)
         val assigneeId = item.assigneeId
         if (assigneeId != null) item.assignee = personRepository.findById(assigneeId)
+
+        return item
     }
 
 }

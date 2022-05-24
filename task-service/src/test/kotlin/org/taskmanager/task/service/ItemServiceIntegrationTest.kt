@@ -54,12 +54,12 @@ class ItemServiceIntegrationTest(@Autowired val itemService: ItemService) {
         runBlocking {
             // setup
             val testItem = Item(description = "test with tags", status = ItemStatus.TODO)
-            testItem.tags = listOf(Tag(name = "test tag 1"), Tag(name = "test tag 2"))
+            testItem.tags = listOf(Tag(id=1), Tag(id=2))
             // when
             val savedTestItem = itemService.create(testItem)
             // then
             assertThat(savedTestItem.id).isNotNull()
-            assertThat(savedTestItem.tags).isNotEmpty
+            assertThat(savedTestItem.tags?.size).isEqualTo(2)
             assertThat(savedTestItem.createdDate).isNotNull()
             assertThat(savedTestItem.lastModifiedDate).isNotNull()
         }

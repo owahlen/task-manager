@@ -39,6 +39,7 @@ fun ItemUpdateResource.toItem(id: Long, version: Long?) = Item(
     id = id,
     version = version,
     description = this.description,
+    status = this.status!!,
     assigneeId = this.assigneeId,
     tags = this.tagIds?.map { Tag(id = it) }
 )
@@ -47,6 +48,7 @@ fun ItemPatchResource.toItem(item: Item) = Item(
     id = item.id,
     version = item.version,
     description = this.description.orElse(item.description),
+    status = this.status.orElse(item.status),
     assigneeId = this.assigneeId.orElse(item.assigneeId),
     tags = if (this.tagIds.isPresent()) {
         this.tagIds.get().map { Tag(id = it) }
