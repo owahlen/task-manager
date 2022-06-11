@@ -1,0 +1,57 @@
+version: '3.7'
+
+# Docker Compose definition for a postgres database with adminer as admin GUI and Keycloak
+# Start with the command:
+#
+# docker-compose up
+
+# keycloak is reachable under http://localhost:8180
+# Note that the databases do not support SSL
+# and that the string "?sslmode=disable" should be added to the DB connection URI
+
+services:
+
+  keycloak:
+    image: jboss/keycloak
+    depends_on:
+      - keycloak_db
+    networks:
+      - taskmanager
+    ports:
+      - 8180:8080
+    environment:
+      DB_VENDOR: POSTGRES
+      DB_ADDR: keycloak_db
+      DB_DATABASE: keycloak
+      DB_USER: postgres
+      DB_PASSWORD: password
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: password
+
+  keycloak_db:
+    image: postgres
+    restart: always
+    networks:
+      - taskmanager
+    ports:
+      - 5433:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: keycloak
+
+  taskmanager_db:
+    image: postgres
+    restart: always
+    networks:
+      - taskmanager
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: taskmanager
+
+networks:
+  taskmanager:
+    name: "taskmanager"

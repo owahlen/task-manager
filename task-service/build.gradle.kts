@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("org.springframework.boot") version "2.6.7"
+    id("org.springframework.boot") version "2.6.8"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
     id("com.palantir.docker") version "0.33.0"
     id("com.palantir.docker-run") version "0.33.0"
@@ -39,7 +39,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
-    implementation("org.liquibase:liquibase-core:4.10.0")
+    implementation("org.liquibase:liquibase-core:4.11.0")
     runtimeOnly("org.postgresql:postgresql")
     runtimeOnly("io.r2dbc:r2dbc-postgresql")
     testImplementation("org.springframework.boot:spring-boot-starter-test") {

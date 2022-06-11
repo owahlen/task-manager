@@ -13,6 +13,18 @@ server:
         include-binding-errors: never
         include-message: always
 
+keycloak:
+    auth-server-url: http://localhost:8180/auth
+    realm: SpringBootKeycloak
+    resource: login-app
+    public-client: true
+    security-constraints:
+        - authRoles: [user]
+          security-collections:
+            - name: API Private Data
+              patterns: ['/todos/search/my-todos/*']
+    principal-attribute: preferred_username
+
 # common database configuration for service and liquibase
 database:
     name: taskmanager
