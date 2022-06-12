@@ -1,7 +1,7 @@
 logging:
   level:
-    org.springframework.data.r2dbc: INFO
     io.r2dbc: INFO
+    org.springframework.data.r2dbc: INFO
 
 server:
   error:
@@ -9,6 +9,13 @@ server:
     include-message: always
 
 spring:
+  liquibase:
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
+    user: ${database.username}
+    password: ${database.password}
+    # We need to add DB_CLOSE_DELAY=-1 in order to keep the liquibase changes when using r2dbc
+    url: jdbc:h2:mem:~/db;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+
   profiles:
     active: test
 
@@ -18,10 +25,3 @@ spring:
     password: ${database.password}
     url: r2dbc:h2:mem:///~/db;MODE=PostgreSQL;
 
-  # Liquibase
-  liquibase:
-    change-log: classpath:/db/changelog/db.changelog-master.yaml
-    user: ${database.username}
-    password: ${database.password}
-    # We need to add DB_CLOSE_DELAY=-1 in order to keep the liquibase changes when using r2dbc
-    url: jdbc:h2:mem:~/db;MODE=PostgreSQL;DB_CLOSE_DELAY=-1

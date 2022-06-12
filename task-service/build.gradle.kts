@@ -17,13 +17,6 @@ repositories {
     mavenCentral()
 }
 
-// the "webResources" configuration is resolved to the "staticWeb" configuration in the task-browser project
-// https://docs.gradle.org/current/userguide/cross_project_publications.html
-val webResources by configurations.creating {
-    isCanBeConsumed = false
-    isCanBeResolved = true
-}
-
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
     implementation("org.springframework:spring-jdbc") // for liquibase
@@ -31,6 +24,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     implementation("org.springdoc:springdoc-openapi-kotlin:1.6.8")
     implementation("org.springdoc:springdoc-openapi-webflux-ui:1.6.8")
     implementation("org.springdoc:springdoc-openapi-security:1.6.8")
@@ -46,20 +40,13 @@ dependencies {
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
         exclude(module = "mockito-core")
     }
-    //testImplementation("org.springframework.boot:spring-security-test")
+    testImplementation("org.springframework.security:spring-security-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-oauth2-client")
     testImplementation("io.projectreactor:reactor-test")
     testImplementation("com.ninja-squad:springmockk:3.1.1")
     testImplementation("io.mockk:mockk:1.12.4")
     testRuntimeOnly("com.h2database:h2")
     testRuntimeOnly("io.r2dbc:r2dbc-h2")
-/*    webResources(
-        project(
-            mapOf(
-                "path" to ":task-browser",
-                "configuration" to "staticWeb"
-            )
-        )
-    )*/
 }
 
 tasks.withType<Test> {
@@ -91,13 +78,3 @@ dockerRun {
     ports("8080:8080")
 }
 
-/*
-tasks.processResources {
-    dependsOn(":task-browser:yarn_build")
-    copy {
-        from(webResources)
-        // spring boot serves static html from the "/public" folder
-        into(layout.buildDirectory.dir("resources/main/public"))
-    }
-}
-*/

@@ -1,29 +1,6 @@
-logging:
-    level:
-        root: INFO
-        org.springframework.security: INFO
-        org.springframework.data.r2dbc: DEBUG
-        io.r2dbc.postgresql.QUERY: DEBUG # for queries
-        io.r2dbc.postgresql.PARAM: DEBUG # for parameters
-        org.springframework.web: INFO
-        liquibase: INFO
-
-server:
-    error:
-        include-binding-errors: never
-        include-message: always
-
-keycloak:
-    auth-server-url: http://localhost:8180/auth
-    realm: SpringBootKeycloak
-    resource: login-app
-    public-client: true
-    security-constraints:
-        - authRoles: [user]
-          security-collections:
-            - name: API Private Data
-              patterns: ['/todos/search/my-todos/*']
-    principal-attribute: preferred_username
+app:
+    security:
+        clientId: "task-browser"
 
 # common database configuration for service and liquibase
 database:
@@ -33,7 +10,29 @@ database:
     username: postgres
     password: password
 
+logging:
+    level:
+        io.r2dbc.postgresql.PARAM: INFO # for parameters
+        io.r2dbc.postgresql.QUERY: INFO # for queries
+        liquibase: INFO
+        org.springframework.data.r2dbc: INFO
+        org.springframework.security: DEBUG
+        org.springframework.web: INFO
+        root: INFO
+
+server:
+    error:
+        include-binding-errors: never
+        include-message: always
+
+
 spring:
+    liquibase:
+        change-log: classpath:/db/changelog/db.changelog-master.yaml
+        user: ${database.username}
+        password: ${database.password}
+        url: jdbc:postgresql://${database.host}:${database.port}/${database.name}?sslmode=disable
+
     r2dbc:
         username: ${database.username}
         password: ${database.password}
@@ -41,11 +40,8 @@ spring:
         # pool.initialSize=5
         # pool.maxSize=5
 
-    liquibase:
-        change-log: classpath:/db/changelog/db.changelog-master.yaml
-        user: ${database.username}
-        password: ${database.password}
-        url: jdbc:postgresql://${database.host}:${database.port}/${database.name}?sslmode=disable
+    security:
+        oauth2.resourceserver.jwt.issuer-uri: "http://localhost:8180/auth/realms/TaskManager"
 
     webflux:
         base-path: /api/v1
