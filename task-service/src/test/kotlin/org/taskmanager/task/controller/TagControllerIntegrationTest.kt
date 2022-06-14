@@ -11,7 +11,7 @@ import org.springframework.data.domain.Sort
 import org.springframework.data.domain.Sort.Order
 import org.springframework.http.MediaType
 import org.springframework.security.core.authority.SimpleGrantedAuthority
-import org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockOidcLogin
+import org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockJwt
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.taskmanager.task.IntegrationTest
@@ -47,7 +47,7 @@ class TagControllerIntegrationTest(
                 tagService.findAllBy(DEFAULT_PAGEABLE).map(Tag::toTagResource).toList()
             assertThat(expectedTagResources.count()).isGreaterThan(0)
             // when
-            webTestClient.mutateWith(mockOidcLogin().idToken { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
+            webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .get()
                 .uri("/tag")
                 .accept(MediaType.APPLICATION_JSON)
@@ -65,7 +65,7 @@ class TagControllerIntegrationTest(
             // setup
             val expectedTagResource = tagService.getById(1).toTagResource()
             // when
-            webTestClient.mutateWith(mockOidcLogin().idToken { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
+            webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .get()
                 .uri("/tag/1")
                 .accept(MediaType.APPLICATION_JSON)
@@ -83,7 +83,7 @@ class TagControllerIntegrationTest(
     fun `test get a tag by invalid id`() {
         runBlocking {
             // when
-            webTestClient.mutateWith(mockOidcLogin().idToken { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
+            webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .get()
                 .uri("/tag/0")
                 .accept(MediaType.APPLICATION_JSON)
@@ -106,7 +106,7 @@ class TagControllerIntegrationTest(
             // setup
             val tagCreateResource = TagCreateResource(name = "Weather")
             // when
-            webTestClient.mutateWith(mockOidcLogin().idToken { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
+            webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .post()
                 .uri("/tag")
                 .bodyValue(tagCreateResource)
@@ -128,7 +128,7 @@ class TagControllerIntegrationTest(
             // setup
             val tagCreateResource = TagCreateResource(name = "")
             // when
-            webTestClient.mutateWith(mockOidcLogin().idToken { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
+            webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .post()
                 .uri("/tag")
                 .bodyValue(tagCreateResource)
@@ -151,7 +151,7 @@ class TagControllerIntegrationTest(
             // setup
             val tagUpdateResource = TagUpdateResource(name = "Vacation")
             // when
-            webTestClient.mutateWith(mockOidcLogin().idToken { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
+            webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .put()
                 .uri("/tag/2")
                 .bodyValue(tagUpdateResource)
@@ -173,7 +173,7 @@ class TagControllerIntegrationTest(
             val tagPatchResource =
                 TagPatchResource(name = Optional.of("Zoo"))
             // when
-            webTestClient.mutateWith(mockOidcLogin().idToken { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
+            webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .patch()
                 .uri("/tag/3")
                 .bodyValue(tagPatchResource)
@@ -194,7 +194,7 @@ class TagControllerIntegrationTest(
             // should not throw TagNotFoundException
             tagService.getById(4)
             // when
-            webTestClient.mutateWith(mockOidcLogin().idToken { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
+            webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .delete()
                 .uri("/tag/4")
                 .exchange()

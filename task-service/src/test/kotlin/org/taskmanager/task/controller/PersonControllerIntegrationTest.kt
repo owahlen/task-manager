@@ -11,7 +11,7 @@ import org.springframework.data.domain.Sort
 import org.springframework.data.domain.Sort.Order
 import org.springframework.http.MediaType
 import org.springframework.security.core.authority.SimpleGrantedAuthority
-import org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockOidcLogin
+import org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockJwt
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.taskmanager.task.IntegrationTest
@@ -47,7 +47,7 @@ class PersonControllerIntegrationTest(
                 personService.findAllBy(DEFAULT_PAGEABLE).map(Person::toPersonResource).toList()
             assertThat(expectedPersonResources.count()).isGreaterThan(0)
             // when
-            webTestClient.mutateWith(mockOidcLogin().idToken { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
+            webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .get()
                 .uri("/person")
                 .accept(MediaType.APPLICATION_JSON)
@@ -71,7 +71,7 @@ class PersonControllerIntegrationTest(
             // setup
             val expectedPersonResource = personService.getById(1).toPersonResource()
             // when
-            webTestClient.mutateWith(mockOidcLogin().idToken { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
+            webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .get()
                 .uri("/person/1")
                 .accept(MediaType.APPLICATION_JSON)
@@ -89,7 +89,7 @@ class PersonControllerIntegrationTest(
     fun `test get a person by invalid id`() {
         runBlocking {
             // when
-            webTestClient.mutateWith(mockOidcLogin().idToken { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
+            webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .get()
                 .uri("/person/0")
                 .accept(MediaType.APPLICATION_JSON)
@@ -112,7 +112,7 @@ class PersonControllerIntegrationTest(
             // setup
             val personCreateResource = PersonCreateResource(firstName = "John", lastName = "Doe")
             // when
-            webTestClient.mutateWith(mockOidcLogin().idToken { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
+            webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .post()
                 .uri("/person")
                 .bodyValue(personCreateResource)
@@ -135,7 +135,7 @@ class PersonControllerIntegrationTest(
             // setup
             val personCreateResource = PersonCreateResource(firstName = "Roger", lastName = "")
             // when
-            webTestClient.mutateWith(mockOidcLogin().idToken { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
+            webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .post()
                 .uri("/person")
                 .bodyValue(personCreateResource)
@@ -158,7 +158,7 @@ class PersonControllerIntegrationTest(
             // setup
             val personUpdateResource = PersonUpdateResource(firstName = "John", lastName = "Doe")
             // when
-            webTestClient.mutateWith(mockOidcLogin().idToken { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
+            webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .put()
                 .uri("/person/2")
                 .bodyValue(personUpdateResource)
@@ -181,7 +181,7 @@ class PersonControllerIntegrationTest(
             val personPatchResource =
                 PersonPatchResource(firstName = Optional.of("William"), lastName = Optional.empty())
             // when
-            webTestClient.mutateWith(mockOidcLogin().idToken { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
+            webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .patch()
                 .uri("/person/3")
                 .bodyValue(personPatchResource)
@@ -203,7 +203,7 @@ class PersonControllerIntegrationTest(
             // should not throw PersonNotFoundException
             personService.getById(4)
             // when
-            webTestClient.mutateWith(mockOidcLogin().idToken { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
+            webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .delete()
                 .uri("/person/4")
                 .exchange()

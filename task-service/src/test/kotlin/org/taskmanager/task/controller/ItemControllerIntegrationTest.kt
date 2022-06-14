@@ -13,7 +13,7 @@ import org.springframework.data.domain.Sort
 import org.springframework.data.domain.Sort.Order
 import org.springframework.http.MediaType
 import org.springframework.security.core.authority.SimpleGrantedAuthority
-import org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockOidcLogin
+import org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockJwt
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.taskmanager.task.IntegrationTest
@@ -49,7 +49,7 @@ class ItemControllerIntegrationTest(
                 itemService.findAllBy(DEFAULT_PAGEABLE).map(Item::toItemResource).toList()
             assertThat(expectedItemResources.count()).isGreaterThan(0)
             // when
-            webTestClient.mutateWith(mockOidcLogin().idToken { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
+            webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .get()
                 .uri("/item")
                 .accept(MediaType.APPLICATION_JSON)
@@ -69,12 +69,25 @@ class ItemControllerIntegrationTest(
     }
 
     @Test
+    fun `test get item page unauthorized`() {
+        runBlocking {
+            // when
+            webTestClient.get()
+                .uri("/item")
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                // then
+                .expectStatus().isUnauthorized
+        }
+    }
+
+    @Test
     fun `test get item by id`() {
         runBlocking {
             // setup
             val expectedItemResource = itemService.getById(1).toItemResource()
             // when
-            webTestClient.mutateWith(mockOidcLogin().idToken { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
+            webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .get()
                 .uri("/item/1")
                 .accept(MediaType.APPLICATION_JSON)
@@ -92,7 +105,7 @@ class ItemControllerIntegrationTest(
     fun `test get a item by invalid id`() {
         runBlocking {
             // when
-            webTestClient.mutateWith(mockOidcLogin().idToken { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
+            webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .get()
                 .uri("/item/0")
                 .accept(MediaType.APPLICATION_JSON)
@@ -116,7 +129,7 @@ class ItemControllerIntegrationTest(
             val itemCreateResource =
                 ItemCreateResource(description = "do homework", assigneeId = 1, tagIds = setOf(1, 2))
             // when
-            webTestClient.mutateWith(mockOidcLogin().idToken { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
+            webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .post()
                 .uri("/item")
                 .bodyValue(itemCreateResource)
@@ -160,7 +173,7 @@ class ItemControllerIntegrationTest(
             // setup
             val itemCreateResource = ItemCreateResource(description = "")
             // when
-            webTestClient.mutateWith(mockOidcLogin().idToken { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
+            webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .post()
                 .uri("/item")
                 .bodyValue(itemCreateResource)
@@ -190,7 +203,7 @@ class ItemControllerIntegrationTest(
                     tagIds = setOf(1, 2)
                 )
             // when
-            webTestClient.mutateWith(mockOidcLogin().idToken { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
+            webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .put()
                 .uri("/item/2")
                 .bodyValue(itemUpdateResource)
@@ -244,7 +257,7 @@ class ItemControllerIntegrationTest(
                     tagIds = Optional.empty()
                 )
             // when
-            webTestClient.mutateWith(mockOidcLogin().idToken { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
+            webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .patch()
                 .uri("/item/3")
                 .bodyValue(itemPatchResource)
@@ -275,7 +288,7 @@ class ItemControllerIntegrationTest(
             // should not throw ItemNotFoundException
             itemService.getById(4)
             // when
-            webTestClient.mutateWith(mockOidcLogin().idToken { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
+            webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .delete()
                 .uri("/item/4")
                 .exchange()
