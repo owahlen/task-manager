@@ -2,21 +2,16 @@ package org.taskmanager.task.repository
 
 import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.dao.OptimisticLockingFailureException
 import org.springframework.test.annotation.DirtiesContext
-import org.taskmanager.task.model.Item
-import org.taskmanager.task.model.ItemStatus
+import org.taskmanager.task.IntegrationTest
 import org.taskmanager.task.model.ItemTag
 
 
-@SpringBootTest
+@IntegrationTest
 @DirtiesContext
 class ItemTagRepositoryIntegrationTest(@Autowired val itemTagRepository: ItemTagRepository) {
 

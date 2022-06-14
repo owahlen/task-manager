@@ -5,16 +5,18 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.context.SpringBootTest.WebEnvironment
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.domain.Sort.Order
 import org.springframework.http.MediaType
+import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockOidcLogin
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.web.reactive.server.WebTestClient
+import org.taskmanager.task.IntegrationTest
 import org.taskmanager.task.api.resource.*
 import org.taskmanager.task.exception.ItemNotFoundException
 import org.taskmanager.task.mapper.toItemResource
@@ -26,9 +28,8 @@ import org.taskmanager.task.model.Tag
 import org.taskmanager.task.service.ItemService
 import java.util.*
 
-// todo: improve tests!!!
-
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+@AutoConfigureWebTestClient
+@IntegrationTest
 @DirtiesContext
 class ItemControllerIntegrationTest(
     @Autowired val webTestClient: WebTestClient,
@@ -37,6 +38,8 @@ class ItemControllerIntegrationTest(
 
     private val DEFAULT_PAGEABLE =
         PageRequest.of(0, 100, Sort.by(Order.by("lastModifiedDate"), Order.by("description")))
+    private val SUBJECT = "test_user";
+    private val USER_AUTHORITY = SimpleGrantedAuthority("ROLE_USER");
 
     @Test
     fun `test get item page`() {
@@ -46,7 +49,8 @@ class ItemControllerIntegrationTest(
                 itemService.findAllBy(DEFAULT_PAGEABLE).map(Item::toItemResource).toList()
             assertThat(expectedItemResources.count()).isGreaterThan(0)
             // when
-            webTestClient.get()
+            webTestClient.mutateWith(mockOidcLogin().idToken { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
+                .get()
                 .uri("/item")
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
@@ -70,7 +74,8 @@ class ItemControllerIntegrationTest(
             // setup
             val expectedItemResource = itemService.getById(1).toItemResource()
             // when
-            webTestClient.get()
+            webTestClient.mutateWith(mockOidcLogin().idToken { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
+                .get()
                 .uri("/item/1")
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
@@ -87,7 +92,8 @@ class ItemControllerIntegrationTest(
     fun `test get a item by invalid id`() {
         runBlocking {
             // when
-            webTestClient.get()
+            webTestClient.mutateWith(mockOidcLogin().idToken { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
+                .get()
                 .uri("/item/0")
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
@@ -110,7 +116,8 @@ class ItemControllerIntegrationTest(
             val itemCreateResource =
                 ItemCreateResource(description = "do homework", assigneeId = 1, tagIds = setOf(1, 2))
             // when
-            webTestClient.post()
+            webTestClient.mutateWith(mockOidcLogin().idToken { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
+                .post()
                 .uri("/item")
                 .bodyValue(itemCreateResource)
                 .exchange()
@@ -153,7 +160,8 @@ class ItemControllerIntegrationTest(
             // setup
             val itemCreateResource = ItemCreateResource(description = "")
             // when
-            webTestClient.post()
+            webTestClient.mutateWith(mockOidcLogin().idToken { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
+                .post()
                 .uri("/item")
                 .bodyValue(itemCreateResource)
                 .exchange()
@@ -182,7 +190,8 @@ class ItemControllerIntegrationTest(
                     tagIds = setOf(1, 2)
                 )
             // when
-            webTestClient.put()
+            webTestClient.mutateWith(mockOidcLogin().idToken { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
+                .put()
                 .uri("/item/2")
                 .bodyValue(itemUpdateResource)
                 .exchange()
@@ -235,7 +244,8 @@ class ItemControllerIntegrationTest(
                     tagIds = Optional.empty()
                 )
             // when
-            webTestClient.patch()
+            webTestClient.mutateWith(mockOidcLogin().idToken { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
+                .patch()
                 .uri("/item/3")
                 .bodyValue(itemPatchResource)
                 .exchange()
@@ -265,7 +275,8 @@ class ItemControllerIntegrationTest(
             // should not throw ItemNotFoundException
             itemService.getById(4)
             // when
-            webTestClient.delete()
+            webTestClient.mutateWith(mockOidcLogin().idToken { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
+                .delete()
                 .uri("/item/4")
                 .exchange()
                 // then
@@ -277,6 +288,5 @@ class ItemControllerIntegrationTest(
             }.isInstanceOf(ItemNotFoundException::class.java)
         }
     }
-
 
 }

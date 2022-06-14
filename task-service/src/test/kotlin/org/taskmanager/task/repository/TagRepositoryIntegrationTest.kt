@@ -6,14 +6,13 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.dao.OptimisticLockingFailureException
 import org.springframework.test.annotation.DirtiesContext
-import org.taskmanager.task.model.Person
+import org.taskmanager.task.IntegrationTest
 import org.taskmanager.task.model.Tag
 
 
-@SpringBootTest
+@IntegrationTest
 @DirtiesContext
 class TagRepositoryIntegrationTest(@Autowired val tagRepository: TagRepository) {
 

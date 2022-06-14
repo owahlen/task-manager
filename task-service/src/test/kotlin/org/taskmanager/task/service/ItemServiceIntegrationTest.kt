@@ -1,22 +1,20 @@
 package org.taskmanager.task.service
 
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
-import org.assertj.core.api.Assertions.`as`
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.domain.Sort.Order
 import org.springframework.test.annotation.DirtiesContext
+import org.taskmanager.task.IntegrationTest
 import org.taskmanager.task.model.Item
 import org.taskmanager.task.model.ItemStatus
 import org.taskmanager.task.model.Tag
 
 
-@SpringBootTest
+@IntegrationTest
 @DirtiesContext
 class ItemServiceIntegrationTest(@Autowired val itemService: ItemService) {
 
@@ -54,7 +52,7 @@ class ItemServiceIntegrationTest(@Autowired val itemService: ItemService) {
         runBlocking {
             // setup
             val testItem = Item(description = "test with tags", status = ItemStatus.TODO)
-            testItem.tags = listOf(Tag(id=1), Tag(id=2))
+            testItem.tags = listOf(Tag(id = 1), Tag(id = 2))
             // when
             val savedTestItem = itemService.create(testItem)
             // then

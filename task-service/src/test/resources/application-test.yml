@@ -1,7 +1,11 @@
 logging:
   level:
     io.r2dbc: INFO
+    liquibase: INFO
     org.springframework.data.r2dbc: INFO
+    org.springframework.security: INFO
+    org.springframework.web: INFO
+    root: INFO
 
 server:
   error:
@@ -15,9 +19,6 @@ spring:
     password: ${database.password}
     # We need to add DB_CLOSE_DELAY=-1 in order to keep the liquibase changes when using r2dbc
     url: jdbc:h2:mem:~/db;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
-
-  profiles:
-    active: test
 
   # R2DBC with H2
   r2dbc:
