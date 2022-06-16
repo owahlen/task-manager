@@ -10,6 +10,14 @@ database:
     username: postgres
     password: password
 
+keycloak:
+    realm: "TaskManager"
+    resource: task-service
+    auth-server-url: "http://localhost:8180/auth"
+    credentials:
+        secret: "foobar"
+
+
 logging:
     level:
         io.r2dbc.postgresql.PARAM: INFO # for parameters
@@ -41,7 +49,7 @@ spring:
         # pool.maxSize=5
 
     security:
-        oauth2.resourceserver.jwt.issuer-uri: "http://localhost:8180/auth/realms/TaskManager"
+        oauth2.resourceserver.jwt.issuer-uri: "${keycloak.auth-server-url}/realms/${keycloak.realm}"
 
     webflux:
         base-path: /api/v1

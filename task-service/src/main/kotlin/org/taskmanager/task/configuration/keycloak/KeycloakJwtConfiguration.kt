@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono
 
 
 @Configuration
-class KeycloakConfiguration {
+class KeycloakJwtConfiguration {
 
     @Bean
     fun keycloakGrantedAuthoritiesConverter(
