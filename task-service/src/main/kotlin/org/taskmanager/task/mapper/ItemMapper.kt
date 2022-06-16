@@ -3,7 +3,6 @@ package org.taskmanager.task.mapper
 import org.taskmanager.task.api.resource.*
 import org.taskmanager.task.model.Item
 import org.taskmanager.task.model.ItemStatus
-import org.taskmanager.task.model.Person
 import org.taskmanager.task.model.Tag
 
 fun Item.toItemResource() = ItemResource(
@@ -11,7 +10,7 @@ fun Item.toItemResource() = ItemResource(
     version = this.version,
     description = this.description,
     status = this.status,
-    assignee = this.assignee?.toPersonResource(),
+    assignee = this.assignee?.toUserResource(),
     tags = this.tags?.map { it.toTagResource() } ?: listOf(),
     createdDate = this.createdDate,
     lastModifiedDate = this.lastModifiedDate
@@ -23,7 +22,7 @@ fun ItemResource.toItem() = Item(
     description = this.description,
     status = this.status ?: ItemStatus.TODO,
     assigneeId = this.assignee?.id,
-    assignee = this.assignee?.toPerson(),
+    assignee = this.assignee?.toUser(),
     tags = this.tags?.map { it.toTag() },
     createdDate = this.createdDate,
     lastModifiedDate = this.lastModifiedDate

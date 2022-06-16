@@ -1,12 +1,12 @@
 databaseChangeLog:
 
   - changeSet:
-      id: 01-create-person-table
+      id: 01-create-users-table
       author: owahlen
       changes:
         - createTable:
             schema: public
-            tableName: person
+            tableName: users
             columns:
               - column:
                   name: id
@@ -82,7 +82,7 @@ databaseChangeLog:
                   type: int
                   constraints:
                     foreignKeyName: fk_item_assignee_id
-                    references: person(id)
+                    references: users(id)
               - column:
                   name: created_date
                   type: timestamp

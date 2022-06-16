@@ -3,9 +3,9 @@
 DELETE FROM item_tag;
 DELETE FROM tag;
 DELETE FROM item;
-DELETE FROM person;
+DELETE FROM users;
 
-INSERT INTO person (id, first_name, last_name) VALUES
+INSERT INTO users (id, first_name, last_name) VALUES
     (1, 'Richard', 'Countin'),
     (2, 'Nathalie', 'Queen'),
     (3, 'Benito', 'Corazon'),

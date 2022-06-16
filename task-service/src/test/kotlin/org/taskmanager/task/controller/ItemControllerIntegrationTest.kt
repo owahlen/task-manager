@@ -20,7 +20,7 @@ import org.taskmanager.task.IntegrationTest
 import org.taskmanager.task.api.resource.*
 import org.taskmanager.task.exception.ItemNotFoundException
 import org.taskmanager.task.mapper.toItemResource
-import org.taskmanager.task.mapper.toPersonResource
+import org.taskmanager.task.mapper.toUserResource
 import org.taskmanager.task.mapper.toTagResource
 import org.taskmanager.task.model.Item
 import org.taskmanager.task.model.ItemStatus
@@ -271,7 +271,7 @@ class ItemControllerIntegrationTest(
                     assertThat(it.version).isEqualTo(originalItem.version!! + 1)
                     assertThat(it.description).isEqualTo("sleep")
                     assertThat(it.status).isEqualTo(originalItem.status)
-                    assertThat(it.assignee).isEqualTo(originalItem.assignee?.toPersonResource())
+                    assertThat(it.assignee).isEqualTo(originalItem.assignee?.toUserResource())
                     val tagResources = it.tags?.sortedBy(TagResource::id)
                     val originalItemTagResources = originalItem.tags?.map(Tag::toTagResource)?.sortedBy(TagResource::id)
                     assertThat(tagResources).isEqualTo(originalItemTagResources)

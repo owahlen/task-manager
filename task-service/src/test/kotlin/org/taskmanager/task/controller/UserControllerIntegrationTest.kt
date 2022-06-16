@@ -15,23 +15,23 @@ import org.springframework.security.test.web.reactive.server.SecurityMockServerC
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.taskmanager.task.IntegrationTest
-import org.taskmanager.task.api.resource.PersonCreateResource
-import org.taskmanager.task.api.resource.PersonPatchResource
-import org.taskmanager.task.api.resource.PersonResource
-import org.taskmanager.task.api.resource.PersonUpdateResource
-import org.taskmanager.task.exception.PersonNotFoundException
-import org.taskmanager.task.mapper.toPersonResource
-import org.taskmanager.task.model.Person
-import org.taskmanager.task.service.PersonService
+import org.taskmanager.task.api.resource.UserCreateResource
+import org.taskmanager.task.api.resource.UserPatchResource
+import org.taskmanager.task.api.resource.UserResource
+import org.taskmanager.task.api.resource.UserUpdateResource
+import org.taskmanager.task.exception.UserNotFoundException
+import org.taskmanager.task.mapper.toUserResource
+import org.taskmanager.task.model.User
+import org.taskmanager.task.service.UserService
 import java.util.*
 
 
 @AutoConfigureWebTestClient
 @IntegrationTest
 @DirtiesContext
-class PersonControllerIntegrationTest(
+class UserControllerIntegrationTest(
     @Autowired val webTestClient: WebTestClient,
-    @Autowired val personService: PersonService
+    @Autowired val userService: UserService
 ) {
 
     private val DEFAULT_PAGEABLE =
@@ -40,16 +40,16 @@ class PersonControllerIntegrationTest(
     private val USER_AUTHORITY = SimpleGrantedAuthority("ROLE_USER");
 
     @Test
-    fun `test get person page`() {
+    fun `test get user page`() {
         runBlocking {
             // setup
-            val expectedPersonResources =
-                personService.findAllBy(DEFAULT_PAGEABLE).map(Person::toPersonResource).toList()
-            assertThat(expectedPersonResources.count()).isGreaterThan(0)
+            val expectedUserResources =
+                userService.findAllBy(DEFAULT_PAGEABLE).map(User::toUserResource).toList()
+            assertThat(expectedUserResources.count()).isGreaterThan(0)
             // when
             webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .get()
-                .uri("/person")
+                .uri("/user")
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 // then
@@ -60,62 +60,62 @@ class PersonControllerIntegrationTest(
     }
 
 //    .expectStatus().isOk
-//    .expectBodyList(PersonResource::class.java)
-//    .value<ListBodySpec<PersonResource>> {
-//        assertThat(it).isEqualTo(expectedPersonResources)
+//    .expectBodyList(UserResource::class.java)
+//    .value<ListBodySpec<UserResource>> {
+//        assertThat(it).isEqualTo(expectedUserResources)
 //    }
 
     @Test
-    fun `test get person by id`() {
+    fun `test get user by id`() {
         runBlocking {
             // setup
-            val expectedPersonResource = personService.getById(1).toPersonResource()
+            val expectedUserResource = userService.getById(1).toUserResource()
             // when
             webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .get()
-                .uri("/person/1")
+                .uri("/user/1")
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 // then
                 .expectStatus().isOk
-                .expectBody(PersonResource::class.java)
+                .expectBody(UserResource::class.java)
                 .value {
-                    assertThat(it).isEqualTo(expectedPersonResource)
+                    assertThat(it).isEqualTo(expectedUserResource)
                 }
         }
     }
 
     @Test
-    fun `test get a person by invalid id`() {
+    fun `test get a user by invalid id`() {
         runBlocking {
             // when
             webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .get()
-                .uri("/person/0")
+                .uri("/user/0")
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 // then
                 .expectStatus().isNotFound
                 .expectBody()
                 .jsonPath("$.timestamp").isNotEmpty
-                .jsonPath("$.path").isEqualTo("/person/0")
+                .jsonPath("$.path").isEqualTo("/user/0")
                 .jsonPath("$.status").isEqualTo(404)
                 .jsonPath("$.error").isEqualTo("Not Found")
-                .jsonPath("$.message").isEqualTo("Person [0] was not found")
+                .jsonPath("$.message").isEqualTo("User [0] was not found")
                 .jsonPath("$.requestId").isNotEmpty
         }
     }
 
     @Test
-    fun `test create a person`() {
+    fun `test create a user`() {
         runBlocking {
             // setup
-            val personCreateResource = PersonCreateResource(firstName = "John", lastName = "Doe")
+            val userCreateResource = UserCreateResource(firstName = "John", lastName = "Doe")
             // when
             webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .post()
-                .uri("/person")
-                .bodyValue(personCreateResource)
+                .uri("/user")
+                .bodyValue(userCreateResource)
                 .exchange()
                 // then
                 .expectStatus().isOk
@@ -130,21 +130,21 @@ class PersonControllerIntegrationTest(
     }
 
     @Test
-    fun `test creating a person with blank lastName`() {
+    fun `test creating a user with blank lastName`() {
         runBlocking {
             // setup
-            val personCreateResource = PersonCreateResource(firstName = "Roger", lastName = "")
+            val userCreateResource = UserCreateResource(firstName = "Roger", lastName = "")
             // when
             webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .post()
-                .uri("/person")
-                .bodyValue(personCreateResource)
+                .uri("/user")
+                .bodyValue(userCreateResource)
                 .exchange()
                 // then
                 .expectStatus().isBadRequest
                 .expectBody()
                 .jsonPath("$.timestamp").isNotEmpty
-                .jsonPath("$.path").isEqualTo("/person")
+                .jsonPath("$.path").isEqualTo("/user")
                 .jsonPath("$.status").isEqualTo(400)
                 .jsonPath("$.error").isEqualTo("Bad Request")
                 .jsonPath("$.message").isEqualTo("lastName [] must not be blank")
@@ -153,67 +153,67 @@ class PersonControllerIntegrationTest(
     }
 
     @Test
-    fun `test updating a person`() {
+    fun `test updating a user`() {
         runBlocking {
             // setup
-            val personUpdateResource = PersonUpdateResource(firstName = "John", lastName = "Doe")
+            val userUpdateResource = UserUpdateResource(firstName = "John", lastName = "Doe")
             // when
             webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .put()
-                .uri("/person/2")
-                .bodyValue(personUpdateResource)
+                .uri("/user/2")
+                .bodyValue(userUpdateResource)
                 .exchange()
                 // then
                 .expectStatus().isOk
-                .expectBody(PersonResource::class.java)
+                .expectBody(UserResource::class.java)
                 .value {
-                    assertThat(it.firstName).isEqualTo(personUpdateResource.firstName)
-                    assertThat(it.lastName).isEqualTo(personUpdateResource.lastName)
+                    assertThat(it.firstName).isEqualTo(userUpdateResource.firstName)
+                    assertThat(it.lastName).isEqualTo(userUpdateResource.lastName)
                 }
         }
     }
 
     @Test
-    fun `test patching a person`() {
+    fun `test patching a user`() {
         runBlocking {
             // setup
-            val loadedPersonResource = personService.getById(3).toPersonResource()
-            val personPatchResource =
-                PersonPatchResource(firstName = Optional.of("William"), lastName = Optional.empty())
+            val loadedUserResource = userService.getById(3).toUserResource()
+            val userPatchResource =
+                UserPatchResource(firstName = Optional.of("William"), lastName = Optional.empty())
             // when
             webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .patch()
-                .uri("/person/3")
-                .bodyValue(personPatchResource)
+                .uri("/user/3")
+                .bodyValue(userPatchResource)
                 .exchange()
                 // then
                 .expectStatus().isOk
-                .expectBody(PersonResource::class.java)
+                .expectBody(UserResource::class.java)
                 .value {
                     assertThat(it.firstName).isEqualTo("William")
-                    assertThat(it.lastName).isEqualTo(loadedPersonResource.lastName)
+                    assertThat(it.lastName).isEqualTo(loadedUserResource.lastName)
                 }
         }
     }
 
     @Test
-    fun `test deleting a person`() {
+    fun `test deleting a user`() {
         runBlocking {
             // setup
-            // should not throw PersonNotFoundException
-            personService.getById(4)
+            // should not throw UserNotFoundException
+            userService.getById(4)
             // when
             webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .delete()
-                .uri("/person/4")
+                .uri("/user/4")
                 .exchange()
                 // then
                 .expectStatus().isNoContent
             assertThatThrownBy {
                 runBlocking {
-                    personService.getById(4)
+                    userService.getById(4)
                 }
-            }.isInstanceOf(PersonNotFoundException::class.java)
+            }.isInstanceOf(UserNotFoundException::class.java)
         }
     }
 

@@ -15,7 +15,7 @@ keycloak:
     resource: task-service
     auth-server-url: "http://localhost:8180/auth"
     credentials:
-        secret: "foobar"
+        secret: "1A6beK1yhb5rz62Tsr5YqY0WwRU6VXe9"
 
 
 logging:

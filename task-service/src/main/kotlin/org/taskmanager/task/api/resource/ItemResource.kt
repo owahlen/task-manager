@@ -8,7 +8,7 @@ data class ItemResource(
     val version: Long? = null,
     var description: String? = null,
     var status: ItemStatus? = null,
-    var assignee: PersonResource? = null,
+    var assignee: UserResource? = null,
     var tags: List<TagResource>? = null,
     val createdDate: LocalDateTime? = null,
     val lastModifiedDate: LocalDateTime? = null

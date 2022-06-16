@@ -30,7 +30,7 @@ class TagController(private val tagService: TagService) {
         responses = [ApiResponse(responseCode = "200", description = "got page of tags")]
     )
     @GetMapping(produces = [APPLICATION_JSON_VALUE])
-    suspend fun getAllPersons(
+    suspend fun getAllUsers(
         @PageableDefault(value = 100, sort = ["name"], direction = Sort.Direction.ASC)
         pageable: Pageable
     ): Page<TagResource> {

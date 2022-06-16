@@ -33,7 +33,7 @@ class TagService(
     /**
      * Get a tag with version check
      * @param id id of the tag
-     * @param version if version is not null check with currently stored person
+     * @param version if version is not null check with currently stored user
      * @return the currently stored tag
      */
     suspend fun getById(id: Long, version: Long? = null): Tag {

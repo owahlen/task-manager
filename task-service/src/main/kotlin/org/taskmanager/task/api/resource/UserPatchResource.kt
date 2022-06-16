@@ -5,7 +5,7 @@ import org.taskmanager.task.api.validation.OptionalNotBlank
 import org.taskmanager.task.api.validation.OptionalSize
 import java.util.*
 
-data class PersonPatchResource(
+data class UserPatchResource(
     // Kotlin has a limitation for validating bean validations in containers.
     // @see https://youtrack.jetbrains.com/issue/KT-26605
     // Therefore custom validators are used:

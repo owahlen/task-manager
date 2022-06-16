@@ -2,7 +2,7 @@ package org.taskmanager.task.api.resource
 
 import java.time.LocalDateTime
 
-data class PersonResource(
+data class UserResource(
     val id: Long? = null,
     val version: Long? = null,
     var firstName: String? = null,

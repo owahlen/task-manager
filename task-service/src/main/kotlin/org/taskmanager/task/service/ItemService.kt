@@ -14,14 +14,14 @@ import org.taskmanager.task.model.ItemTag
 import org.taskmanager.task.model.Tag
 import org.taskmanager.task.repository.ItemRepository
 import org.taskmanager.task.repository.ItemTagRepository
-import org.taskmanager.task.repository.PersonRepository
+import org.taskmanager.task.repository.UserRepository
 import org.taskmanager.task.repository.TagRepository
 
 
 @Service
 class ItemService(
     private val itemRepository: ItemRepository,
-    private val personRepository: PersonRepository,
+    private val userRepository: UserRepository,
     private val itemTagRepository: ItemTagRepository,
     private val tagRepository: TagRepository
 ) {
@@ -144,7 +144,7 @@ class ItemService(
 
         // Load the assignee (if set)
         val assigneeId = item.assigneeId
-        if (assigneeId != null) item.assignee = personRepository.findById(assigneeId)
+        if (assigneeId != null) item.assignee = userRepository.findById(assigneeId)
 
         return item
     }

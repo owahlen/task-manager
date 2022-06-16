@@ -29,7 +29,7 @@ data class Item(
 
     @Transient
     @Value("null")
-    var assignee: Person? = null,
+    var assignee: User? = null,
 
     @Transient
     @Value("null")
