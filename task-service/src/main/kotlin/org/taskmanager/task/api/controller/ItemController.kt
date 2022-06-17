@@ -14,9 +14,6 @@ import org.taskmanager.task.api.resource.ItemCreateResource
 import org.taskmanager.task.api.resource.ItemPatchResource
 import org.taskmanager.task.api.resource.ItemResource
 import org.taskmanager.task.api.resource.ItemUpdateResource
-import org.taskmanager.task.mapper.toItem
-import org.taskmanager.task.mapper.toItemResource
-import org.taskmanager.task.model.Item
 import org.taskmanager.task.service.ItemService
 import javax.validation.Valid
 
@@ -33,7 +30,7 @@ class ItemController(private val itemService: ItemService) {
         @PageableDefault(value = 100, sort = ["lastModifiedDate", "description"], direction = Sort.Direction.ASC)
         pageable: Pageable
     ): Page<ItemResource> {
-        return itemService.findAllBy(pageable).map(Item::toItemResource)
+        return itemService.findAllBy(pageable)
     }
 
     @Operation(
@@ -44,7 +41,7 @@ class ItemController(private val itemService: ItemService) {
     )
     @GetMapping("/{id}", produces = [APPLICATION_JSON_VALUE])
     suspend fun getItemById(@PathVariable id: Long): ItemResource {
-        return itemService.getById(id).toItemResource()
+        return itemService.getById(id)
     }
 
     @Operation(
@@ -54,7 +51,7 @@ class ItemController(private val itemService: ItemService) {
     )
     @PostMapping(produces = [APPLICATION_JSON_VALUE])
     suspend fun createItem(@Valid @RequestBody itemCreateResource: ItemCreateResource): ItemResource {
-        return itemService.create(itemCreateResource.toItem()).toItemResource()
+        return itemService.create(itemCreateResource)
     }
 
     @Operation(
@@ -69,7 +66,7 @@ class ItemController(private val itemService: ItemService) {
         @RequestHeader(value = HttpHeaders.IF_MATCH) version: Long?,
         @Valid @RequestBody itemUpdateResource: ItemUpdateResource
     ): ItemResource {
-        return itemService.update(itemUpdateResource.toItem(id, version)).toItemResource()
+        return itemService.update(id, version, itemUpdateResource)
     }
 
     @Operation(
@@ -84,8 +81,7 @@ class ItemController(private val itemService: ItemService) {
         @RequestHeader(value = HttpHeaders.IF_MATCH) version: Long?,
         @Valid @RequestBody itemPatchResource: ItemPatchResource
     ): ItemResource {
-        val item = itemService.getById(id, version, true)
-        return itemService.update(itemPatchResource.toItem(item)).toItemResource()
+        return itemService.patch(id, version, itemPatchResource)
     }
 
     @Operation(
@@ -100,6 +96,6 @@ class ItemController(private val itemService: ItemService) {
         @PathVariable id: Long,
         @RequestHeader(value = HttpHeaders.IF_MATCH) version: Long?
     ) {
-        itemService.deleteById(id, version)
+        itemService.delete(id, version)
     }
 }

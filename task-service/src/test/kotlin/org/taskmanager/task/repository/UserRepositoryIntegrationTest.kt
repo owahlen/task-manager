@@ -32,6 +32,7 @@ class UserRepositoryIntegrationTest(@Autowired val userRepository: UserRepositor
             assertThat(existingUser).isNotNull()
             assertThat(existingUser!!.id).isEqualTo(1)
             assertThat(existingUser.version).isEqualTo(1)
+            assertThat(existingUser.email).isEqualTo("richard.countin@test.org")
             assertThat(existingUser.firstName).isEqualTo("Richard")
             assertThat(existingUser.lastName).isEqualTo("Countin")
             assertThat(existingUser.createdDate).isNotNull()
@@ -43,7 +44,13 @@ class UserRepositoryIntegrationTest(@Autowired val userRepository: UserRepositor
     fun `test creation, update and optimistic locking for users`() {
         runBlocking {
             // when
-            var existingUser = userRepository.save(User(firstName = "John", lastName = "Doe"))
+            var existingUser = userRepository.save(
+                User(
+                    email = "john.doe@test.org",
+                    firstName = "John",
+                    lastName = "Doe"
+                )
+            )
             // then
             assertThat(existingUser).isNotNull()
             assertThat(existingUser.id).isNotNull()
@@ -71,13 +78,13 @@ class UserRepositoryIntegrationTest(@Autowired val userRepository: UserRepositor
     fun `test findAllBy pageable returns page of users`() {
         runBlocking {
             // setup
-            val sort = Sort.by(Order.by("firstName"), Order.by("lastName"))
+            val sort = Sort.by(Order.by("firstName"), Order.by("lastName"), Order.by("email"))
             val pageable = PageRequest.of(0, 100, sort)
             // when
             val users = userRepository.findAllBy(pageable).toList()
             // then
             assertThat(users.count()).isGreaterThan(2)
-            val sortedUsers = users.sortedWith(compareBy(User::firstName, User::lastName))
+            val sortedUsers = users.sortedWith(compareBy(User::firstName, User::lastName, User::email))
             assertThat(users).isEqualTo(sortedUsers)
         }
     }

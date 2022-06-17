@@ -13,7 +13,7 @@ data class ItemUpdateResource(
     @field:NotNull
     var status: ItemStatus? = null,
 
-    var assigneeId: Long? = null,
+    var assigneeUuid: String? = null,
 
     var tagIds: Set<Long>? = null,
 )

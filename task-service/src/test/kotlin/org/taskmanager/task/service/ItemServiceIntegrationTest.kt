@@ -9,9 +9,7 @@ import org.springframework.data.domain.Sort
 import org.springframework.data.domain.Sort.Order
 import org.springframework.test.annotation.DirtiesContext
 import org.taskmanager.task.IntegrationTest
-import org.taskmanager.task.model.Item
-import org.taskmanager.task.model.ItemStatus
-import org.taskmanager.task.model.Tag
+import org.taskmanager.task.api.resource.ItemCreateResource
 
 
 @IntegrationTest
@@ -25,11 +23,11 @@ class ItemServiceIntegrationTest(@Autowired val itemService: ItemService) {
             val sort = Sort.by(Order.by("lastModifiedDate"))
             val pageable = PageRequest.of(0, 100, sort)
             // when
-            val items = itemService.findAllBy(pageable).toList()
+            val itemResources = itemService.findAllBy(pageable).toList()
             // then
-            assertThat(items.count()).isGreaterThan(2)
-            val sortedItems = items.sortedBy { it.lastModifiedDate }
-            assertThat(items).isEqualTo(sortedItems)
+            assertThat(itemResources.count()).isGreaterThan(2)
+            val sortedItems = itemResources.sortedBy { it.lastModifiedDate }
+            assertThat(itemResources).isEqualTo(sortedItems)
         }
     }
 
@@ -37,9 +35,9 @@ class ItemServiceIntegrationTest(@Autowired val itemService: ItemService) {
     fun `test create Item with description and status`() {
         runBlocking {
             // setup
-            val testItem = Item(description = "test with description and status", status = ItemStatus.TODO)
+            val testItemCreateResource = ItemCreateResource(description = "test with description and status")
             // when
-            val savedTestItem = itemService.create(testItem)
+            val savedTestItem = itemService.create(testItemCreateResource)
             // then
             assertThat(savedTestItem.id).isNotNull()
             assertThat(savedTestItem.createdDate).isNotNull()
@@ -51,15 +49,15 @@ class ItemServiceIntegrationTest(@Autowired val itemService: ItemService) {
     fun `test create Item with tags`() {
         runBlocking {
             // setup
-            val testItem = Item(description = "test with tags", status = ItemStatus.TODO)
-            testItem.tags = listOf(Tag(id = 1), Tag(id = 2))
+            val testItemCreateResource = ItemCreateResource(description = "test with tags")
+            testItemCreateResource.tagIds = setOf(1,2)
             // when
-            val savedTestItem = itemService.create(testItem)
+            val savedTestItemCreateResource = itemService.create(testItemCreateResource)
             // then
-            assertThat(savedTestItem.id).isNotNull()
-            assertThat(savedTestItem.tags?.size).isEqualTo(2)
-            assertThat(savedTestItem.createdDate).isNotNull()
-            assertThat(savedTestItem.lastModifiedDate).isNotNull()
+            assertThat(savedTestItemCreateResource.id).isNotNull()
+            assertThat(savedTestItemCreateResource.tags?.size).isEqualTo(2)
+            assertThat(savedTestItemCreateResource.createdDate).isNotNull()
+            assertThat(savedTestItemCreateResource.lastModifiedDate).isNotNull()
         }
     }
 }

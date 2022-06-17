@@ -44,7 +44,7 @@ class TagControllerIntegrationTest(
         runBlocking {
             // setup
             val expectedTagResources =
-                tagService.findAllBy(DEFAULT_PAGEABLE).map(Tag::toTagResource).toList()
+                tagService.findAllBy(DEFAULT_PAGEABLE).toList()
             assertThat(expectedTagResources.count()).isGreaterThan(0)
             // when
             webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
@@ -63,7 +63,7 @@ class TagControllerIntegrationTest(
     fun `test get tag by id`() {
         runBlocking {
             // setup
-            val expectedTagResource = tagService.getById(1).toTagResource()
+            val expectedTagResource = tagService.getById(1)
             // when
             webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .get()
@@ -169,7 +169,7 @@ class TagControllerIntegrationTest(
     fun `test patching a tag`() {
         runBlocking {
             // setup
-            tagService.getById(3).toTagResource()
+            tagService.getById(3)
             val tagPatchResource =
                 TagPatchResource(name = Optional.of("Zoo"))
             // when

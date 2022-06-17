@@ -35,7 +35,7 @@ class UserControllerIntegrationTest(
 ) {
 
     private val DEFAULT_PAGEABLE =
-        PageRequest.of(0, 100, Sort.by(Order.by("firstName"), Order.by("lastName")))
+        PageRequest.of(0, 100, Sort.by(Order.by("firstName"), Order.by("lastName"), Order.by("email")))
     private val SUBJECT = "test_user";
     private val USER_AUTHORITY = SimpleGrantedAuthority("ROLE_USER");
 
@@ -43,8 +43,7 @@ class UserControllerIntegrationTest(
     fun `test get user page`() {
         runBlocking {
             // setup
-            val expectedUserResources =
-                userService.findAllBy(DEFAULT_PAGEABLE).map(User::toUserResource).toList()
+            val expectedUserResources = userService.findAllBy(DEFAULT_PAGEABLE).toList()
             assertThat(expectedUserResources.count()).isGreaterThan(0)
             // when
             webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
@@ -55,7 +54,9 @@ class UserControllerIntegrationTest(
                 // then
                 .expectStatus().isOk
                 .expectBody()
+                .jsonPath("$.content[0].email").isNotEmpty
                 .jsonPath("$.content[0].firstName").isNotEmpty
+                .jsonPath("$.content[0].lastName").isNotEmpty
         }
     }
 
@@ -69,11 +70,12 @@ class UserControllerIntegrationTest(
     fun `test get user by id`() {
         runBlocking {
             // setup
-            val expectedUserResource = userService.getById(1).toUserResource()
+            val uuid = "00000000-0000-0000-0000-000000000001"
+            val expectedUserResource = userService.getByUuid("00000000-0000-0000-0000-000000000001")
             // when
             webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .get()
-                .uri("/user/1")
+                .uri("/user/${uuid}")
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 // then
@@ -88,20 +90,22 @@ class UserControllerIntegrationTest(
     @Test
     fun `test get a user by invalid id`() {
         runBlocking {
+            // setup
+            val invalidUuid = "fffffff-ffff-ffff-ffff-ffffffffffff"
             // when
             webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .get()
-                .uri("/user/0")
+                .uri("/user/${invalidUuid}")
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 // then
                 .expectStatus().isNotFound
                 .expectBody()
                 .jsonPath("$.timestamp").isNotEmpty
-                .jsonPath("$.path").isEqualTo("/user/0")
+                .jsonPath("$.path").isEqualTo("/user/${invalidUuid}")
                 .jsonPath("$.status").isEqualTo(404)
                 .jsonPath("$.error").isEqualTo("Not Found")
-                .jsonPath("$.message").isEqualTo("User [0] was not found")
+                .jsonPath("$.message").isEqualTo("User [${invalidUuid}] was not found")
                 .jsonPath("$.requestId").isNotEmpty
         }
     }
@@ -110,7 +114,12 @@ class UserControllerIntegrationTest(
     fun `test create a user`() {
         runBlocking {
             // setup
-            val userCreateResource = UserCreateResource(firstName = "John", lastName = "Doe")
+            val userCreateResource = UserCreateResource(
+                email = "john.doe@test.org",
+                password = "password",
+                firstName = "John",
+                lastName = "Doe"
+            )
             // when
             webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .post()
@@ -119,13 +128,17 @@ class UserControllerIntegrationTest(
                 .exchange()
                 // then
                 .expectStatus().isOk
-                .expectBody()
-                .jsonPath("$.id").isNumber
-                .jsonPath("$.version").isNumber
-                .jsonPath("$.firstName").isEqualTo("John")
-                .jsonPath("$.lastName").isEqualTo("Doe")
-                .jsonPath("$.createdDate").isNotEmpty
-                .jsonPath("$.lastModifiedDate").isNotEmpty
+                .expectBody(UserResource::class.java)
+                .value {
+                    assertThat(it.uuid).isNotBlank
+                    assertThat(it.uuid).matches("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\$")
+                    assertThat(it.version).isGreaterThan(0)
+                    assertThat(it.email).isNotBlank
+                    assertThat(it.firstName).isNotBlank
+                    assertThat(it.lastName).isNotBlank
+                    assertThat(it.createdDate).isNotNull
+                    assertThat(it.lastModifiedDate).isNotNull
+                }
         }
     }
 
@@ -153,20 +166,56 @@ class UserControllerIntegrationTest(
     }
 
     @Test
-    fun `test updating a user`() {
+    fun `test updating a user without providing password`() {
         runBlocking {
             // setup
-            val userUpdateResource = UserUpdateResource(firstName = "John", lastName = "Doe")
+            val uuid = "00000000-0000-0000-0000-000000000002"
+            val userUpdateResource = UserUpdateResource(
+                email = "john.doe@test.org",
+                firstName = "John",
+                lastName = "Doe"
+            )
             // when
             webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .put()
-                .uri("/user/2")
+                .uri("/user/${uuid}")
                 .bodyValue(userUpdateResource)
                 .exchange()
                 // then
                 .expectStatus().isOk
                 .expectBody(UserResource::class.java)
                 .value {
+                    assertThat(it.email).isEqualTo(userUpdateResource.email)
+                    // todo: test that password is not changed
+                    assertThat(it.firstName).isEqualTo(userUpdateResource.firstName)
+                    assertThat(it.lastName).isEqualTo(userUpdateResource.lastName)
+                }
+        }
+    }
+
+    @Test
+    fun `test updating a user with provided password`() {
+        runBlocking {
+            // setup
+            val uuid = "00000000-0000-0000-0000-000000000002"
+            val userUpdateResource = UserUpdateResource(
+                email = "john.doe@test.org",
+                password = "password",
+                firstName = "John",
+                lastName = "Doe"
+            )
+            // when
+            webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
+                .put()
+                .uri("/user/${uuid}")
+                .bodyValue(userUpdateResource)
+                .exchange()
+                // then
+                .expectStatus().isOk
+                .expectBody(UserResource::class.java)
+                .value {
+                    assertThat(it.email).isEqualTo(userUpdateResource.email)
+                    // todo: test that password is changed
                     assertThat(it.firstName).isEqualTo(userUpdateResource.firstName)
                     assertThat(it.lastName).isEqualTo(userUpdateResource.lastName)
                 }
@@ -177,19 +226,26 @@ class UserControllerIntegrationTest(
     fun `test patching a user`() {
         runBlocking {
             // setup
-            val loadedUserResource = userService.getById(3).toUserResource()
+            val uuid = "00000000-0000-0000-0000-000000000003"
+            val loadedUserResource = userService.getByUuid(uuid)
             val userPatchResource =
-                UserPatchResource(firstName = Optional.of("William"), lastName = Optional.empty())
+                UserPatchResource(
+                    email = Optional.empty(),
+                    password = Optional.empty(),
+                    firstName = Optional.of("William"),
+                    lastName = Optional.empty()
+                )
             // when
             webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .patch()
-                .uri("/user/3")
+                .uri("/user/${uuid}")
                 .bodyValue(userPatchResource)
                 .exchange()
                 // then
                 .expectStatus().isOk
                 .expectBody(UserResource::class.java)
                 .value {
+                    assertThat(it.email).isEqualTo(loadedUserResource.email)
                     assertThat(it.firstName).isEqualTo("William")
                     assertThat(it.lastName).isEqualTo(loadedUserResource.lastName)
                 }
@@ -200,18 +256,19 @@ class UserControllerIntegrationTest(
     fun `test deleting a user`() {
         runBlocking {
             // setup
+            val uuid = "00000000-0000-0000-0000-000000000004"
             // should not throw UserNotFoundException
-            userService.getById(4)
+            userService.getByUuid(uuid)
             // when
             webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .delete()
-                .uri("/user/4")
+                .uri("/user/${uuid}")
                 .exchange()
                 // then
                 .expectStatus().isNoContent
             assertThatThrownBy {
                 runBlocking {
-                    userService.getById(4)
+                    userService.getByUuid(uuid)
                 }
             }.isInstanceOf(UserNotFoundException::class.java)
         }

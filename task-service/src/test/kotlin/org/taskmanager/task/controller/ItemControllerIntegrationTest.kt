@@ -45,8 +45,7 @@ class ItemControllerIntegrationTest(
     fun `test get item page`() {
         runBlocking {
             // setup
-            val expectedItemResources =
-                itemService.findAllBy(DEFAULT_PAGEABLE).map(Item::toItemResource).toList()
+            val expectedItemResources = itemService.findAllBy(DEFAULT_PAGEABLE).toList()
             assertThat(expectedItemResources.count()).isGreaterThan(0)
             // when
             webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
@@ -85,7 +84,7 @@ class ItemControllerIntegrationTest(
     fun `test get item by id`() {
         runBlocking {
             // setup
-            val expectedItemResource = itemService.getById(1).toItemResource()
+            val expectedItemResource = itemService.getById(1)
             // when
             webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .get()
@@ -126,8 +125,9 @@ class ItemControllerIntegrationTest(
     fun `test create a item`() {
         runBlocking {
             // setup
+            val assigneeUuid = "00000000-0000-0000-0000-000000000001"
             val itemCreateResource =
-                ItemCreateResource(description = "do homework", assigneeId = 1, tagIds = setOf(1, 2))
+                ItemCreateResource(description = "do homework", assigneeUuid = assigneeUuid, tagIds = setOf(1, 2))
             // when
             webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .post()
@@ -144,7 +144,7 @@ class ItemControllerIntegrationTest(
                     assertThat(it.status).isEqualTo(ItemStatus.TODO)
                     val assignee = it.assignee
                     assertThat(assignee).isNotNull
-                    assertThat(assignee!!.id).isEqualTo(1)
+                    assertThat(assignee!!.uuid).isEqualTo(assigneeUuid)
                     assertThat(assignee.version).isNotNull
                     assertThat(assignee.firstName).isNotBlank
                     assertThat(assignee.lastName).isNotBlank
@@ -194,12 +194,12 @@ class ItemControllerIntegrationTest(
     fun `test updating a item`() {
         runBlocking {
             // setup
+            val assigneeUuid = "00000000-0000-0000-0000-000000000001"
             val originalItem = itemService.getById(2) // ensure item with id 3 exists
-            val itemUpdateResource =
-                ItemUpdateResource(
+            val itemUpdateResource = ItemUpdateResource(
                     description = "do homework",
                     status = ItemStatus.DONE,
-                    assigneeId = 1,
+                    assigneeUuid = assigneeUuid,
                     tagIds = setOf(1, 2)
                 )
             // when
@@ -219,7 +219,7 @@ class ItemControllerIntegrationTest(
                     assertThat(it.status).isEqualTo(ItemStatus.DONE)
                     val assignee = it.assignee
                     assertThat(assignee).isNotNull
-                    assertThat(assignee!!.id).isEqualTo(1)
+                    assertThat(assignee!!.uuid).isEqualTo(assigneeUuid)
                     assertThat(assignee.version).isNotNull
                     assertThat(assignee.firstName).isNotBlank
                     assertThat(assignee.lastName).isNotBlank
@@ -253,7 +253,7 @@ class ItemControllerIntegrationTest(
                 ItemPatchResource(
                     description = Optional.of("sleep"),
                     status = Optional.empty(),
-                    assigneeId = Optional.empty(),
+                    assigneeUuid = Optional.empty(),
                     tagIds = Optional.empty()
                 )
             // when
@@ -271,9 +271,9 @@ class ItemControllerIntegrationTest(
                     assertThat(it.version).isEqualTo(originalItem.version!! + 1)
                     assertThat(it.description).isEqualTo("sleep")
                     assertThat(it.status).isEqualTo(originalItem.status)
-                    assertThat(it.assignee).isEqualTo(originalItem.assignee?.toUserResource())
+                    assertThat(it.assignee).isEqualTo(originalItem.assignee)
                     val tagResources = it.tags?.sortedBy(TagResource::id)
-                    val originalItemTagResources = originalItem.tags?.map(Tag::toTagResource)?.sortedBy(TagResource::id)
+                    val originalItemTagResources = originalItem.tags?.sortedBy(TagResource::id)
                     assertThat(tagResources).isEqualTo(originalItemTagResources)
                     assertThat(it.createdDate).isEqualTo(originalItem.createdDate)
                     assertThat(it.lastModifiedDate).isNotNull

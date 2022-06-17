@@ -9,7 +9,7 @@ class OptionalNotBlankValidator : ConstraintValidator<OptionalNotBlank, Optional
 
     override fun isValid(
         nameField: Optional<String>,
-        cxt: ConstraintValidatorContext
+        context: ConstraintValidatorContext
     ): Boolean {
         return nameField.isEmpty() || nameField.get().trim().isNotEmpty()
     }

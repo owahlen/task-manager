@@ -15,9 +15,6 @@ import org.taskmanager.task.api.resource.UserCreateResource
 import org.taskmanager.task.api.resource.UserPatchResource
 import org.taskmanager.task.api.resource.UserResource
 import org.taskmanager.task.api.resource.UserUpdateResource
-import org.taskmanager.task.mapper.toUser
-import org.taskmanager.task.mapper.toUserResource
-import org.taskmanager.task.model.User
 import org.taskmanager.task.service.UserService
 import javax.validation.Valid
 
@@ -31,10 +28,10 @@ class UserController(private val userService: UserService) {
     )
     @GetMapping(produces = [APPLICATION_JSON_VALUE])
     suspend fun getAllUsers(
-        @PageableDefault(value = 100, sort = ["firstName", "lastName"], direction = Sort.Direction.ASC)
+        @PageableDefault(value = 100, sort = ["firstName", "lastName", "email"], direction = Sort.Direction.ASC)
         pageable: Pageable
     ): Page<UserResource> {
-        return userService.findAllBy(pageable).map(User::toUserResource)
+        return userService.findAllBy(pageable)
     }
 
     @Operation(
@@ -43,9 +40,9 @@ class UserController(private val userService: UserService) {
             ApiResponse(responseCode = "400", description = "bad parameter"),
             ApiResponse(responseCode = "404", description = "user not found")]
     )
-    @GetMapping("/{id}", produces = [APPLICATION_JSON_VALUE])
-    suspend fun getUserById(@PathVariable id: Long): UserResource {
-        return userService.getById(id).toUserResource()
+    @GetMapping("/{uuid}", produces = [APPLICATION_JSON_VALUE])
+    suspend fun getUserById(@PathVariable uuid: String): UserResource {
+        return userService.getByUuid(uuid)
     }
 
     @Operation(
@@ -55,7 +52,7 @@ class UserController(private val userService: UserService) {
     )
     @PostMapping(produces = [APPLICATION_JSON_VALUE])
     suspend fun createUser(@Valid @RequestBody userCreateResource: UserCreateResource): UserResource {
-        return userService.create(userCreateResource.toUser()).toUserResource()
+        return userService.create(userCreateResource)
     }
 
     @Operation(
@@ -64,13 +61,13 @@ class UserController(private val userService: UserService) {
             ApiResponse(responseCode = "400", description = "bad parameter"),
             ApiResponse(responseCode = "404", description = "user not found")]
     )
-    @PutMapping("/{id}", produces = [APPLICATION_JSON_VALUE])
+    @PutMapping("/{uuid}", produces = [APPLICATION_JSON_VALUE])
     suspend fun updateUser(
-        @PathVariable id: Long,
+        @PathVariable uuid: String,
         @RequestHeader(value = HttpHeaders.IF_MATCH) version: Long?,
         @Valid @RequestBody userUpdateResource: UserUpdateResource
     ): UserResource {
-        return userService.update(userUpdateResource.toUser(id, version)).toUserResource()
+        return userService.update(uuid, version, userUpdateResource)
     }
 
     @Operation(
@@ -79,14 +76,13 @@ class UserController(private val userService: UserService) {
             ApiResponse(responseCode = "400", description = "bad parameter"),
             ApiResponse(responseCode = "404", description = "user not found")]
     )
-    @PatchMapping("/{id}", produces = [APPLICATION_JSON_VALUE])
+    @PatchMapping("/{uuid}", produces = [APPLICATION_JSON_VALUE])
     suspend fun patchUser(
-        @PathVariable id: Long,
+        @PathVariable uuid: String,
         @RequestHeader(value = HttpHeaders.IF_MATCH) version: Long?,
         @Valid @RequestBody userPatchResource: UserPatchResource
     ): UserResource {
-        val user = userService.getById(id, version)
-        return userService.update(userPatchResource.toUser(user)).toUserResource()
+        return userService.patch(uuid, version, userPatchResource)
     }
 
     @Operation(
@@ -95,12 +91,12 @@ class UserController(private val userService: UserService) {
             ApiResponse(responseCode = "400", description = "bad parameter"),
             ApiResponse(responseCode = "404", description = "user not found")]
     )
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{uuid}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     suspend fun deleteUser(
-        @PathVariable id: Long,
+        @PathVariable uuid: String,
         @RequestHeader(value = HttpHeaders.IF_MATCH) version: Long?
     ) {
-        userService.deleteById(id, version)
+        userService.delete(uuid, version)
     }
 }

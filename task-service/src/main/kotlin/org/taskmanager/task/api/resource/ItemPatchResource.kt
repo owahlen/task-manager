@@ -20,7 +20,7 @@ data class ItemPatchResource(
 
     val status: Optional<ItemStatus>,
 
-    val assigneeId: Optional<Long>,
+    val assigneeUuid: Optional<String>,
 
     val tagIds: Optional<Set<Long>>
 )

@@ -16,39 +16,39 @@ fun Item.toItemResource() = ItemResource(
     lastModifiedDate = this.lastModifiedDate
 )
 
-fun ItemResource.toItem() = Item(
+fun ItemResource.toItem(assigneeId: Long?) = Item(
     id = this.id,
     version = this.version,
     description = this.description,
     status = this.status ?: ItemStatus.TODO,
-    assigneeId = this.assignee?.id,
+    assigneeId = assigneeId,
     assignee = this.assignee?.toUser(),
     tags = this.tags?.map { it.toTag() },
     createdDate = this.createdDate,
     lastModifiedDate = this.lastModifiedDate
 )
 
-fun ItemCreateResource.toItem() = Item(
+fun ItemCreateResource.toItem(assigneeId: Long?) = Item(
     description = this.description,
-    assigneeId = this.assigneeId,
+    assigneeId = assigneeId,
     tags = this.tagIds?.map { Tag(id = it) }
 )
 
-fun ItemUpdateResource.toItem(id: Long, version: Long?) = Item(
+fun ItemUpdateResource.toItem(id: Long, version: Long?, assigneeId: Long?) = Item(
     id = id,
     version = version,
     description = this.description,
     status = this.status!!,
-    assigneeId = this.assigneeId,
+    assigneeId = assigneeId,
     tags = this.tagIds?.map { Tag(id = it) }
 )
 
-fun ItemPatchResource.toItem(item: Item) = Item(
+fun ItemPatchResource.toItem(item: Item, assigneeId: Long?) = Item(
     id = item.id,
     version = item.version,
     description = this.description.orElse(item.description),
     status = this.status.orElse(item.status),
-    assigneeId = this.assigneeId.orElse(item.assigneeId),
+    assigneeId = assigneeId,
     tags = if (this.tagIds.isPresent()) {
         this.tagIds.get().map { Tag(id = it) }
     } else {

@@ -5,11 +5,11 @@ DELETE FROM tag;
 DELETE FROM item;
 DELETE FROM users;
 
-INSERT INTO users (id, first_name, last_name) VALUES
-    (1, 'Richard', 'Countin'),
-    (2, 'Nathalie', 'Queen'),
-    (3, 'Benito', 'Corazon'),
-    (4, 'Vince', 'Power');
+INSERT INTO users (id, uuid, email, first_name, last_name) VALUES
+    (1, '00000000-0000-0000-0000-000000000001', 'richard.countin@test.org', 'Richard', 'Countin'),
+    (2, '00000000-0000-0000-0000-000000000002', 'nathalie.queen@test.org', 'Nathalie', 'Queen'),
+    (3, '00000000-0000-0000-0000-000000000003','benito.corazon@test.org', 'Benito', 'Corazon'),
+    (4, '00000000-0000-0000-0000-000000000004','vince.power@test.org', 'Vince', 'Power');
 
 INSERT INTO tag (id, name) VALUES
     (1, 'Work'),

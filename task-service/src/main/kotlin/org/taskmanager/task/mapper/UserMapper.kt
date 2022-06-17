@@ -7,8 +7,9 @@ import org.taskmanager.task.api.resource.UserUpdateResource
 import org.taskmanager.task.model.User
 
 fun User.toUserResource() = UserResource(
-    id = this.id,
+    uuid = this.uuid,
     version = this.version,
+    email = this.email,
     firstName = this.firstName,
     lastName = this.lastName,
     createdDate = this.createdDate,
@@ -16,8 +17,9 @@ fun User.toUserResource() = UserResource(
 )
 
 fun UserResource.toUser() = User(
-    id = this.id,
+    uuid = this.uuid,
     version = this.version,
+    email = this.email,
     firstName = this.firstName,
     lastName = this.lastName,
     createdDate = this.createdDate,
@@ -25,13 +27,15 @@ fun UserResource.toUser() = User(
 )
 
 fun UserCreateResource.toUser() = User(
+    email = this.email,
     firstName = this.firstName,
     lastName = this.lastName,
 )
 
-fun UserUpdateResource.toUser(id: Long, version: Long?) = User(
-    id = id,
+fun UserUpdateResource.toUser(uuid: String, version: Long?) = User(
+    uuid = uuid,
     version = version,
+    email = this.email,
     firstName = this.firstName,
     lastName = this.lastName,
 )
@@ -39,6 +43,8 @@ fun UserUpdateResource.toUser(id: Long, version: Long?) = User(
 fun UserPatchResource.toUser(user: User) = User(
     id = user.id,
     version = user.version,
+    uuid = user.uuid,
+    email = this.email.orElse(user.email),
     firstName = this.firstName.orElse(user.firstName),
     lastName = this.lastName.orElse(user.lastName)
 )

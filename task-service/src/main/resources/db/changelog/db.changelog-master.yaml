@@ -23,6 +23,16 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
+                  name: uuid
+                  type: varchar(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: email
+                  type: varchar(256)
+                  constraints:
+                    nullable: false
+              - column:
                   name: first_name
                   type: varchar(100)
                   constraints:

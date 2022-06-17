@@ -7,8 +7,11 @@ import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.taskmanager.task.api.resource.*
 import org.taskmanager.task.exception.ItemNotFoundException
 import org.taskmanager.task.exception.UnexpectedItemVersionException
+import org.taskmanager.task.mapper.toItem
+import org.taskmanager.task.mapper.toItemResource
 import org.taskmanager.task.model.Item
 import org.taskmanager.task.model.ItemTag
 import org.taskmanager.task.model.Tag
@@ -31,10 +34,10 @@ class ItemService(
      * @param pageable page definition
      * @return Page of items
      */
-    suspend fun findAllBy(pageable: Pageable): Page<Item> {
+    suspend fun findAllBy(pageable: Pageable): Page<ItemResource> {
         val dataPage = itemRepository.findAllBy(pageable).map(::populateRelations).toList()
         val total = itemRepository.count()
-        return PageImpl(dataPage, pageable, total)
+        return PageImpl(dataPage, pageable, total).map(Item::toItemResource)
     }
 
     /**
@@ -44,7 +47,90 @@ class ItemService(
      * @param loadRelations true if the related objects must also be retrieved
      * @return the currently stored item
      */
-    suspend fun getById(id: Long, version: Long? = null, loadRelations: Boolean = false): Item {
+    suspend fun getById(id: Long, version: Long? = null, loadRelations: Boolean = false): ItemResource {
+        return getItemById(id, version, loadRelations).toItemResource()
+    }
+
+    /**
+     * Create a new item
+     * @param item item to be created
+     * @return the created item without the related entities
+     */
+    @Transactional
+    suspend fun create(itemCreateResource: ItemCreateResource): ItemResource {
+        val assigneeId = itemCreateResource.assigneeUuid?.let { userRepository.findByUuid(it) }?.id
+        val item = itemCreateResource.toItem(assigneeId)
+        val savedItem = itemRepository.save(item)
+        itemCreateResource.tagIds?.map { tagId ->
+            ItemTag(itemId = savedItem.id!!, tagId = tagId)
+        }?.forEach {
+            // Note: saveAll does not work with R2DBC therefore each itemTag is saved, individually
+            itemTagRepository.save(it)
+        }
+        return savedItem.also {
+            populateRelations(savedItem)
+        }.toItemResource()
+    }
+
+    /**
+     * Update an item with version check
+     * @param item item to be saved
+     * @return the saved item without the related entities
+     */
+    @Transactional
+    suspend fun update(id: Long, version: Long?, itemUpdateResource: ItemUpdateResource): ItemResource {
+        val assigneeId = itemUpdateResource.assigneeUuid?.let { userRepository.findByUuid(it) }?.id
+        val item = itemUpdateResource.toItem(id, version, assigneeId)
+        return updateItem(item).toItemResource()
+    }
+
+    @Transactional
+    suspend fun patch(id: Long, version: Long?, itemPatchResource: ItemPatchResource): ItemResource {
+        val assigneeUuid = itemPatchResource.assigneeUuid.orElse(null)
+        val assigneeId = assigneeUuid?.let { userRepository.findByUuid(it) }?.id
+        val existingItem = getItemById(id, version)
+        val patchedItem = itemPatchResource.toItem(existingItem, assigneeId)
+        return updateItem(patchedItem).toItemResource()
+    }
+
+    /**
+     * Delete an item with version check
+     * This method transitively deletes item-tags of the item
+     * @param id id of the item to be deleted
+     * @param version if not null check that version matches the version of the currently stored item
+     */
+    @Transactional
+    suspend fun delete(id: Long, version: Long? = null) {
+        // check that item with this id exists
+        val item = getItemById(id, version, false)
+        itemTagRepository.deleteAllByItemId(id)
+        itemRepository.delete(item)
+    }
+
+    /**
+     * Populate the tags and assignee related to an item
+     * @param item Item
+     * @return The items with the loaded related objects (assignee, tags)
+     */
+    private suspend fun populateRelations(item: Item): Item {
+        // Load the tags
+        item.tags = tagRepository.findTagsByItemId(item.id!!).toList()
+
+        // Load the assignee (if set)
+        val assigneeId = item.assigneeId
+        if (assigneeId != null) item.assignee = userRepository.findById(assigneeId)
+
+        return item
+    }
+
+    /**
+     * Get an item with version check
+     * @param id            id of the item
+     * @param version       expected version to be retrieved
+     * @param loadRelations true if the related objects must also be retrieved
+     * @return the currently stored item
+     */
+    private suspend fun getItemById(id: Long, version: Long? = null, loadRelations: Boolean = false): Item {
         val item = itemRepository.findById(id) ?: throw ItemNotFoundException(id)
         if (version != null && version != item.version) {
             // Optimistic locking: pre-check
@@ -56,35 +142,7 @@ class ItemService(
         }
     }
 
-    /**
-     * Create a new item
-     * @param item item to be created
-     * @return the created item without the related entities
-     */
-    @Transactional
-    suspend fun create(item: Item): Item {
-        if (item.id != null || item.version != null) {
-            throw IllegalArgumentException("When creating an item, the id and the version must be null")
-        }
-        val savedItem = itemRepository.save(item)
-        item.tags?.map { tag ->
-            ItemTag(itemId = savedItem.id!!, tagId = tag.id)
-        }?.forEach {
-            // Note: saveAll does not work with R2DBC therefore each itemTag is saved, individually
-            itemTagRepository.save(it)
-        }
-        return savedItem.also {
-            populateRelations(savedItem)
-        }
-    }
-
-    /**
-     * Update an item with version check
-     * @param item item to be saved
-     * @return the saved item without the related entities
-     */
-    @Transactional
-    suspend fun update(item: Item): Item {
+    private suspend fun updateItem(item: Item): Item {
         if (item.id == null) {
             throw IllegalArgumentException("When updating an item, the id must be provided")
         }
@@ -117,36 +175,6 @@ class ItemService(
         return itemRepository.save(itemToSave).also {
             populateRelations(it)
         }
-    }
-
-    /**
-     * Delete an item with version check
-     * This method transitively deletes item-tags of the item
-     * @param id id of the item to be deleted
-     * @param version if not null check that version matches the version of the currently stored item
-     */
-    @Transactional
-    suspend fun deleteById(id: Long, version: Long? = null) {
-        // check that item with this id exists
-        val item = getById(id, version, false)
-        itemTagRepository.deleteAllByItemId(id)
-        itemRepository.delete(item)
-    }
-
-    /**
-     * Populate the tags and assignee related to an item
-     * @param item Item
-     * @return The items with the loaded related objects (assignee, tags)
-     */
-    private suspend fun populateRelations(item: Item): Item {
-        // Load the tags
-        item.tags = tagRepository.findTagsByItemId(item.id!!).toList()
-
-        // Load the assignee (if set)
-        val assigneeId = item.assigneeId
-        if (assigneeId != null) item.assignee = userRepository.findById(assigneeId)
-
-        return item
     }
 
 }

@@ -7,6 +7,6 @@ data class ItemCreateResource(
     @field:NotBlank
     @field:Size(max = 4000)
     var description: String? = null,
-    var assigneeId: Long? = null,
+    var assigneeUuid: String? = null,
     var tagIds: Set<Long>? = null,
 )

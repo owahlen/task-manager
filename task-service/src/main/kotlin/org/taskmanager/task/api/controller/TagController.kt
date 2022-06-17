@@ -34,7 +34,7 @@ class TagController(private val tagService: TagService) {
         @PageableDefault(value = 100, sort = ["name"], direction = Sort.Direction.ASC)
         pageable: Pageable
     ): Page<TagResource> {
-        return tagService.findAllBy(pageable).map(Tag::toTagResource)
+        return tagService.findAllBy(pageable)
     }
 
     @Operation(
@@ -45,7 +45,7 @@ class TagController(private val tagService: TagService) {
     )
     @GetMapping("/{id}", produces = [APPLICATION_JSON_VALUE])
     suspend fun getTagById(@PathVariable id: Long): TagResource {
-        return tagService.getById(id).toTagResource()
+        return tagService.getById(id)
     }
 
     @Operation(
@@ -55,7 +55,7 @@ class TagController(private val tagService: TagService) {
     )
     @PostMapping(produces = [APPLICATION_JSON_VALUE])
     suspend fun createTag(@Valid @RequestBody tagCreateResource: TagCreateResource): TagResource {
-        return tagService.create(tagCreateResource.toTag()).toTagResource()
+        return tagService.create(tagCreateResource)
     }
 
     @Operation(
@@ -70,7 +70,7 @@ class TagController(private val tagService: TagService) {
         @RequestHeader(value = HttpHeaders.IF_MATCH) version: Long?,
         @Valid @RequestBody tagUpdateResource: TagUpdateResource
     ): TagResource {
-        return tagService.update(tagUpdateResource.toTag(id, version)).toTagResource()
+        return tagService.update(id, version, tagUpdateResource)
     }
 
     @Operation(
@@ -86,7 +86,7 @@ class TagController(private val tagService: TagService) {
         @Valid @RequestBody tagPatchResource: TagPatchResource
     ): TagResource {
         val tag = tagService.getById(id, version)
-        return tagService.update(tagPatchResource.toTag(tag)).toTagResource()
+        return tagService.patch(id, version, tagPatchResource)
     }
 
     @Operation(
@@ -101,6 +101,6 @@ class TagController(private val tagService: TagService) {
         @PathVariable id: Long,
         @RequestHeader(value = HttpHeaders.IF_MATCH) version: Long?
     ) {
-        tagService.deleteById(id, version)
+        tagService.delete(id, version)
     }
 }

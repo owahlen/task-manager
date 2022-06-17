@@ -11,11 +11,10 @@ import org.springframework.data.domain.Sort.Order
 import org.springframework.test.annotation.DirtiesContext
 import org.taskmanager.task.IntegrationTest
 import org.taskmanager.task.api.resource.UserCreateResource
+import org.taskmanager.task.api.resource.UserResource
 import org.taskmanager.task.api.resource.UserUpdateResource
 import org.taskmanager.task.exception.UserNotFoundException
 import org.taskmanager.task.exception.UnexpectedUserVersionException
-import org.taskmanager.task.mapper.toUser
-import org.taskmanager.task.model.User
 
 
 @IntegrationTest
@@ -26,30 +25,34 @@ class UserServiceIntegrationTest(@Autowired val userService: UserService) {
     fun `test findAllBy pageable returns page of users`() {
         runBlocking {
             // setup
-            val sort = Sort.by(Order.by("firstName"), Order.by("lastName"))
+            val sort = Sort.by(Order.by("firstName"), Order.by("lastName"), Order.by("email"))
             val pageable = PageRequest.of(0, 100, sort)
             // when
-            val users = userService.findAllBy(pageable).toList()
+            val userResources = userService.findAllBy(pageable).toList()
             // then
-            assertThat(users.count()).isGreaterThan(2)
-            val sortedUsers = users.sortedWith(compareBy(User::firstName, User::lastName))
-            assertThat(users).isEqualTo(sortedUsers)
+            assertThat(userResources.count()).isGreaterThan(2)
+            val sortedUsers = userResources.sortedWith(
+                compareBy(UserResource::firstName, UserResource::lastName, UserResource::email)
+            )
+            assertThat(userResources).isEqualTo(sortedUsers)
         }
     }
 
     @Test
     fun `test getById returns user or throws UserNotFoundException`() {
         runBlocking {
+            // setup
+            val uuid = "00000000-0000-0000-0000-000000000001"
             // when
-            val existingUser = userService.getById(1)
+            val existingUserResource = userService.getByUuid(uuid)
             // then
-            assertThat(existingUser).isNotNull()
-            assertThat(existingUser.id).isEqualTo(1)
+            assertThat(existingUserResource).isNotNull()
+            assertThat(existingUserResource.uuid).isEqualTo(uuid)
 
             // when / then
             assertThatThrownBy {
                 runBlocking {
-                    userService.getById(-1)
+                    userService.getByUuid("fffffff-ffff-ffff-ffff-ffffffffffff")
                 }
             }.isInstanceOf(UserNotFoundException::class.java)
         }
@@ -61,7 +64,7 @@ class UserServiceIntegrationTest(@Autowired val userService: UserService) {
             // when / then
             assertThatThrownBy {
                 runBlocking {
-                    userService.getById(1, -1)
+                    userService.getByUuid("00000000-0000-0000-0000-000000000001", -1)
                 }
             }.isInstanceOf(UnexpectedUserVersionException::class.java)
         }
@@ -71,33 +74,74 @@ class UserServiceIntegrationTest(@Autowired val userService: UserService) {
     fun `test create user`() {
         runBlocking {
             // setup
-            val user = UserCreateResource("John", "Walker").toUser()
+            val userCreateResource = UserCreateResource(
+                "john.walker@test.org",
+                "password",
+                "John",
+                "Walker"
+            )
             // when
-            val savedUser = userService.create(user)
+            val savedUser = userService.create(userCreateResource)
             // then
             assertThat(savedUser).isNotNull
-            assertThat(savedUser.id).isNotNull
+            assertThat(savedUser.uuid).isNotNull
             assertThat(savedUser.version).isNotNull
-            assertThat(savedUser.firstName).isEqualTo(user.firstName)
-            assertThat(savedUser.lastName).isEqualTo(user.lastName)
+            assertThat(savedUser.email).isEqualTo(userCreateResource.email)
+            // todo: test that the password is stored
+            assertThat(savedUser.firstName).isEqualTo(userCreateResource.firstName)
+            assertThat(savedUser.lastName).isEqualTo(userCreateResource.lastName)
             assertThat(savedUser.createdDate).isNotNull
             assertThat(savedUser.lastModifiedDate).isNotNull
         }
     }
 
     @Test
-    fun `test update user`() {
+    fun `test update user without password change`() {
         runBlocking {
             // setup
-            val user = UserUpdateResource("John", "Walker").toUser(2, null)
+            val uuid = "00000000-0000-0000-0000-000000000002"
+            val userUpdateResource = UserUpdateResource(
+                "john.walker@test.org",
+                null,
+                "John",
+                "Walker"
+            )
             // when
-            val updatedUser = userService.update(user)
+            val updatedUser = userService.update(uuid, null, userUpdateResource)
             // then
             assertThat(updatedUser).isNotNull
-            assertThat(updatedUser.id).isEqualTo(2)
+            assertThat(updatedUser.uuid).isEqualTo(uuid)
             assertThat(updatedUser.version).isNotNull
-            assertThat(updatedUser.firstName).isEqualTo(user.firstName)
-            assertThat(updatedUser.lastName).isEqualTo(user.lastName)
+            assertThat(updatedUser.email).isEqualTo(userUpdateResource.email)
+            // todo: test that the password is not changed
+            assertThat(updatedUser.firstName).isEqualTo(userUpdateResource.firstName)
+            assertThat(updatedUser.lastName).isEqualTo(userUpdateResource.lastName)
+            assertThat(updatedUser.createdDate).isNotNull
+            assertThat(updatedUser.lastModifiedDate).isNotNull
+        }
+    }
+
+    @Test
+    fun `test update user with password change`() {
+        runBlocking {
+            // setup
+            val uuid = "00000000-0000-0000-0000-000000000002"
+            val userUpdateResource = UserUpdateResource(
+                "till.harper@test.org",
+                "password",
+                "Till",
+                "Harper"
+            )
+            // when
+            val updatedUser = userService.update(uuid, null, userUpdateResource)
+            // then
+            assertThat(updatedUser).isNotNull
+            assertThat(updatedUser.uuid).isEqualTo(uuid)
+            assertThat(updatedUser.version).isNotNull
+            assertThat(updatedUser.email).isEqualTo(userUpdateResource.email)
+            // todo: test that the password is changed
+            assertThat(updatedUser.firstName).isEqualTo(userUpdateResource.firstName)
+            assertThat(updatedUser.lastName).isEqualTo(userUpdateResource.lastName)
             assertThat(updatedUser.createdDate).isNotNull
             assertThat(updatedUser.lastModifiedDate).isNotNull
         }
@@ -107,18 +151,18 @@ class UserServiceIntegrationTest(@Autowired val userService: UserService) {
     fun `test delete user`() {
         runBlocking {
             // setup
-            val user = userService.getById(3)
-            assertThat(user).isNotNull
+            val uuid = "00000000-0000-0000-0000-000000000003"
+            val userResource = userService.getByUuid(uuid)
+            assertThat(userResource).isNotNull
             // when
-            userService.deleteById(3)
+            userService.delete(uuid)
             // then
             assertThatThrownBy {
                 runBlocking {
-                    userService.getById(3)
+                    userService.getByUuid(uuid)
                 }
             }.isInstanceOf(UserNotFoundException::class.java)
         }
     }
 
 }
-
