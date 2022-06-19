@@ -49,9 +49,5 @@ fun ItemPatchResource.toItem(item: Item, assigneeId: Long?) = Item(
     description = this.description.orElse(item.description),
     status = this.status.orElse(item.status),
     assigneeId = assigneeId,
-    tags = if (this.tagIds.isPresent()) {
-        this.tagIds.get().map { Tag(id = it) }
-    } else {
-        item.tags
-    }
+    tags = this.tagIds.map { it.map(::Tag) }.orElse(item.tags)
 )

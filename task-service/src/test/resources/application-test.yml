@@ -20,6 +20,11 @@ spring:
     # We need to add DB_CLOSE_DELAY=-1 in order to keep the liquibase changes when using r2dbc
     url: jdbc:h2:mem:~/db;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
 
+
+  main:
+    allow-bean-definition-overriding: true
+    allow-circular-references: false
+
   # R2DBC with H2
   r2dbc:
     username: ${database.username}

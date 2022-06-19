@@ -43,18 +43,23 @@ class UserRepositoryIntegrationTest(@Autowired val userRepository: UserRepositor
     @Test
     fun `test creation, update and optimistic locking for users`() {
         runBlocking {
-            // when
-            var existingUser = userRepository.save(
-                User(
-                    email = "john.doe@test.org",
-                    firstName = "John",
-                    lastName = "Doe"
-                )
+            // setup
+            val user = User(
+                uuid="00000000-0000-0000-0000-000000001001",
+                email = "john.doe@test.org",
+                firstName = "John",
+                lastName = "Doe"
             )
+            // when
+            var existingUser = userRepository.save(user)
             // then
             assertThat(existingUser).isNotNull()
             assertThat(existingUser.id).isNotNull()
             assertThat(existingUser.version).isEqualTo(0)
+            assertThat(existingUser.uuid).isEqualTo(user.uuid)
+            assertThat(existingUser.email).isEqualTo(user.email)
+            assertThat(existingUser.firstName).isEqualTo(user.firstName)
+            assertThat(existingUser.lastName).isEqualTo(user.lastName)
 
             // when
             existingUser.lastName = "Walker"

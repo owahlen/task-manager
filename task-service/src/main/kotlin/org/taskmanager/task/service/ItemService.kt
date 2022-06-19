@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional
 import org.taskmanager.task.api.resource.*
 import org.taskmanager.task.exception.ItemNotFoundException
 import org.taskmanager.task.exception.UnexpectedItemVersionException
+import org.taskmanager.task.exception.UserNotFoundException
 import org.taskmanager.task.mapper.toItem
 import org.taskmanager.task.mapper.toItemResource
 import org.taskmanager.task.model.Item
@@ -86,10 +87,14 @@ class ItemService(
 
     @Transactional
     suspend fun patch(id: Long, version: Long?, itemPatchResource: ItemPatchResource): ItemResource {
-        val assigneeUuid = itemPatchResource.assigneeUuid.orElse(null)
-        val assigneeId = assigneeUuid?.let { userRepository.findByUuid(it) }?.id
-        val existingItem = getItemById(id, version)
-        val patchedItem = itemPatchResource.toItem(existingItem, assigneeId)
+        val existingItem = getItemById(id, version, true)
+        // patch assignee
+        val patchAssigneeUuid = itemPatchResource.assigneeUuid.orElse(null)
+        val newAssigneeId = patchAssigneeUuid?.let {
+            userRepository.findByUuid(it) ?: throw UserNotFoundException(it)
+        }?.id ?: existingItem.assigneeId
+        // patch tags
+        val patchedItem = itemPatchResource.toItem(existingItem, newAssigneeId)
         return updateItem(patchedItem).toItemResource()
     }
 

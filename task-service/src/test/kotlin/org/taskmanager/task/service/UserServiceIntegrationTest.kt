@@ -3,23 +3,39 @@ package org.taskmanager.task.service
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.domain.Sort.Order
 import org.springframework.test.annotation.DirtiesContext
+import org.springframework.test.context.ContextConfiguration
 import org.taskmanager.task.IntegrationTest
 import org.taskmanager.task.api.resource.UserCreateResource
 import org.taskmanager.task.api.resource.UserResource
 import org.taskmanager.task.api.resource.UserUpdateResource
-import org.taskmanager.task.exception.UserNotFoundException
+import org.taskmanager.task.configuration.keycloak.FakeKeycloakUserStore
+import org.taskmanager.task.configuration.keycloak.KeycloakTestConfiguration
 import org.taskmanager.task.exception.UnexpectedUserVersionException
+import org.taskmanager.task.exception.UserNotFoundException
+import org.taskmanager.task.repository.UserRepository
 
 
+@ContextConfiguration(classes = [KeycloakTestConfiguration::class])
 @IntegrationTest
 @DirtiesContext
-class UserServiceIntegrationTest(@Autowired val userService: UserService) {
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class UserServiceIntegrationTest(
+    @Autowired val userService: UserService,
+    @Autowired val userRepository: UserRepository,
+    @Autowired val fakeKeycloakUserStore: FakeKeycloakUserStore
+) {
+    @BeforeAll
+    fun beforeAll() {
+        fakeKeycloakUserStore.initializeFakeKeycloakUserStore(userRepository)
+    }
 
     @Test
     fun `test findAllBy pageable returns page of users`() {
@@ -39,7 +55,7 @@ class UserServiceIntegrationTest(@Autowired val userService: UserService) {
     }
 
     @Test
-    fun `test getById returns user or throws UserNotFoundException`() {
+    fun `test getByUuid returns user or throws UserNotFoundException`() {
         runBlocking {
             // setup
             val uuid = "00000000-0000-0000-0000-000000000001"
@@ -87,11 +103,18 @@ class UserServiceIntegrationTest(@Autowired val userService: UserService) {
             assertThat(savedUser.uuid).isNotNull
             assertThat(savedUser.version).isNotNull
             assertThat(savedUser.email).isEqualTo(userCreateResource.email)
-            // todo: test that the password is stored
             assertThat(savedUser.firstName).isEqualTo(userCreateResource.firstName)
             assertThat(savedUser.lastName).isEqualTo(userCreateResource.lastName)
             assertThat(savedUser.createdDate).isNotNull
             assertThat(savedUser.lastModifiedDate).isNotNull
+            val keycloakUser = fakeKeycloakUserStore.users[savedUser.uuid]
+            assertThat(keycloakUser).isNotNull
+            assertThat(keycloakUser!!.uuid).isEqualTo(savedUser.uuid)
+            assertThat(keycloakUser.username).isEqualTo(userCreateResource.email)
+            assertThat(keycloakUser.email).isEqualTo(userCreateResource.email)
+            assertThat(keycloakUser.password).isEqualTo(userCreateResource.password)
+            assertThat(keycloakUser.firstName).isEqualTo(userCreateResource.firstName)
+            assertThat(keycloakUser.lastName).isEqualTo(userCreateResource.lastName)
         }
     }
 
@@ -106,6 +129,9 @@ class UserServiceIntegrationTest(@Autowired val userService: UserService) {
                 "John",
                 "Walker"
             )
+            val keycloakUser = fakeKeycloakUserStore.users[uuid]
+            assertThat(keycloakUser).isNotNull
+            val oldPassword = keycloakUser!!.password
             // when
             val updatedUser = userService.update(uuid, null, userUpdateResource)
             // then
@@ -113,11 +139,16 @@ class UserServiceIntegrationTest(@Autowired val userService: UserService) {
             assertThat(updatedUser.uuid).isEqualTo(uuid)
             assertThat(updatedUser.version).isNotNull
             assertThat(updatedUser.email).isEqualTo(userUpdateResource.email)
-            // todo: test that the password is not changed
             assertThat(updatedUser.firstName).isEqualTo(userUpdateResource.firstName)
             assertThat(updatedUser.lastName).isEqualTo(userUpdateResource.lastName)
             assertThat(updatedUser.createdDate).isNotNull
             assertThat(updatedUser.lastModifiedDate).isNotNull
+            assertThat(keycloakUser.uuid).isEqualTo(uuid)
+            assertThat(keycloakUser.username).isEqualTo(userUpdateResource.email)
+            assertThat(keycloakUser.email).isEqualTo(userUpdateResource.email)
+            assertThat(keycloakUser.password).isEqualTo(oldPassword)
+            assertThat(keycloakUser.firstName).isEqualTo(userUpdateResource.firstName)
+            assertThat(keycloakUser.lastName).isEqualTo(userUpdateResource.lastName)
         }
     }
 
@@ -128,10 +159,12 @@ class UserServiceIntegrationTest(@Autowired val userService: UserService) {
             val uuid = "00000000-0000-0000-0000-000000000002"
             val userUpdateResource = UserUpdateResource(
                 "till.harper@test.org",
-                "password",
+                "new_password",
                 "Till",
                 "Harper"
             )
+            val keycloakUser = fakeKeycloakUserStore.users[uuid]
+            assertThat(keycloakUser).isNotNull
             // when
             val updatedUser = userService.update(uuid, null, userUpdateResource)
             // then
@@ -144,6 +177,12 @@ class UserServiceIntegrationTest(@Autowired val userService: UserService) {
             assertThat(updatedUser.lastName).isEqualTo(userUpdateResource.lastName)
             assertThat(updatedUser.createdDate).isNotNull
             assertThat(updatedUser.lastModifiedDate).isNotNull
+            assertThat(keycloakUser!!.uuid).isEqualTo(uuid)
+            assertThat(keycloakUser.username).isEqualTo(userUpdateResource.email)
+            assertThat(keycloakUser.email).isEqualTo(userUpdateResource.email)
+            assertThat(keycloakUser.password).isEqualTo(userUpdateResource.password)
+            assertThat(keycloakUser.firstName).isEqualTo(userUpdateResource.firstName)
+            assertThat(keycloakUser.lastName).isEqualTo(userUpdateResource.lastName)
         }
     }
 
@@ -154,6 +193,8 @@ class UserServiceIntegrationTest(@Autowired val userService: UserService) {
             val uuid = "00000000-0000-0000-0000-000000000003"
             val userResource = userService.getByUuid(uuid)
             assertThat(userResource).isNotNull
+            val keycloakUser = fakeKeycloakUserStore.users[uuid]
+            assertThat(keycloakUser).isNotNull
             // when
             userService.delete(uuid)
             // then

@@ -59,28 +59,25 @@ class UserService(
      */
     @Transactional
     suspend fun create(userCreateResource: UserCreateResource): UserResource {
-        val email = userCreateResource.email ?: throw java.lang.IllegalArgumentException(
-            "When creating a user its email must be set"
-        )
-        val password = userCreateResource.password ?: throw java.lang.IllegalArgumentException(
-            "When creating a user its password must be set"
-        )
+        val uuid = keycloakUserService.create(userCreateResource)
         val user = userCreateResource.toUser()
-        user.uuid = keycloakUserService.create(email, password)
+        user.uuid = uuid
         return userRepository.save(user).toUserResource()
     }
 
     @Transactional
     suspend fun update(uuid: String, version: Long?, userUpdateResource: UserUpdateResource): UserResource {
         val user = userUpdateResource.toUser(uuid, version)
-        return updateUser(user, userUpdateResource.password).toUserResource()
+        keycloakUserService.update(uuid, userUpdateResource)
+        return updateUser(uuid, user).toUserResource()
     }
 
     @Transactional
     suspend fun patch(uuid: String, version: Long?, userPatchResource: UserPatchResource): UserResource {
         val existingUser = getUserByUuid(uuid, version)
-        val patchdUser = userPatchResource.toUser(existingUser)
-        return updateUser(patchdUser, userPatchResource.password.orElse(null)).toUserResource()
+        val patchUser = userPatchResource.toUser(existingUser)
+        keycloakUserService.patch(uuid, userPatchResource)
+        return updateUser(uuid, patchUser).toUserResource()
     }
 
     /**
@@ -93,7 +90,7 @@ class UserService(
     suspend fun delete(uuid: String, version: Long? = null) {
         // check that user with this id exists
         val user = getUserByUuid(uuid, version)
-        keycloakUserService.deleteByUuid(uuid)
+        keycloakUserService.delete(uuid)
         val userId = user.id!!
         val itemsOfUser = itemRepository.findByAssigneeId(userId).toList()
         itemsOfUser.forEach {
@@ -104,7 +101,8 @@ class UserService(
     }
 
     private suspend fun getUserByUuid(uuid: String, version: Long? = null): User {
-        val user = userRepository.findByUuid(uuid) ?: throw UserNotFoundException(uuid)
+        val user = userRepository.findByUuid(uuid)
+            ?: throw UserNotFoundException(uuid)
         if (version != null && version != user.version) {
             // Optimistic locking: pre-check
             throw UnexpectedUserVersionException(version, user.version!!)
@@ -114,21 +112,19 @@ class UserService(
 
     /**
      * Update a user with version check
-     * @param user user to be updated; if user's version is not null check with currently stored user
+     * @param uuid uuid of the user to be updated
+     * @param user object that contains the values to be updated
      * @return the updated user
      */
-    private suspend fun updateUser(user: User, password: String?): User {
-        val uuid = user.uuid
-        if (uuid == null) {
-            throw IllegalArgumentException("When updating a user, the uuid must be provided")
-        }
+    private suspend fun updateUser(uuid: String, user: User): User {
         // verify that the user with uuid exists and if version!=null then check that it matches
         val storedUser = getUserByUuid(uuid, user.version)
-        val userToSave = user.copy(version = storedUser.version, createdDate = storedUser.createdDate)
-        if (user.email != userToSave.email || password != null) {
-            // the user has a new email or the password needs to be changed
-            keycloakUserService.update(uuid, user.email, password)
-        }
+        val userToSave = user.copy(
+            id = storedUser.id,
+            uuid = storedUser.uuid,
+            version = storedUser.version,
+            createdDate = storedUser.createdDate
+        )
         // Save the user
         return userRepository.save(userToSave)
     }

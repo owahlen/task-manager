@@ -14,8 +14,9 @@ keycloak:
     realm: "TaskManager"
     resource: task-service
     auth-server-url: "http://localhost:8180/auth"
+    group-name: "task-manager-users"
     credentials:
-        secret: "1A6beK1yhb5rz62Tsr5YqY0WwRU6VXe9"
+        secret: "2H1eJsF78MQL0akC9OE2lB7buGLIcIof"
 
 
 logging:

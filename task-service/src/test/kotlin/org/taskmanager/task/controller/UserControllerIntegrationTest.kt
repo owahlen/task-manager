@@ -3,7 +3,9 @@ package org.taskmanager.task.controller
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import org.springframework.data.domain.PageRequest
@@ -13,31 +15,42 @@ import org.springframework.http.MediaType
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockJwt
 import org.springframework.test.annotation.DirtiesContext
+import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.taskmanager.task.IntegrationTest
 import org.taskmanager.task.api.resource.UserCreateResource
 import org.taskmanager.task.api.resource.UserPatchResource
 import org.taskmanager.task.api.resource.UserResource
 import org.taskmanager.task.api.resource.UserUpdateResource
+import org.taskmanager.task.configuration.keycloak.FakeKeycloakUserStore
+import org.taskmanager.task.configuration.keycloak.KeycloakTestConfiguration
 import org.taskmanager.task.exception.UserNotFoundException
-import org.taskmanager.task.mapper.toUserResource
-import org.taskmanager.task.model.User
+import org.taskmanager.task.repository.UserRepository
 import org.taskmanager.task.service.UserService
 import java.util.*
 
 
 @AutoConfigureWebTestClient
+@ContextConfiguration(classes = [KeycloakTestConfiguration::class])
 @IntegrationTest
 @DirtiesContext
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class UserControllerIntegrationTest(
     @Autowired val webTestClient: WebTestClient,
-    @Autowired val userService: UserService
+    @Autowired val userService: UserService,
+    @Autowired val userRepository: UserRepository,
+    @Autowired val fakeKeycloakUserStore: FakeKeycloakUserStore
 ) {
 
     private val DEFAULT_PAGEABLE =
         PageRequest.of(0, 100, Sort.by(Order.by("firstName"), Order.by("lastName"), Order.by("email")))
     private val SUBJECT = "test_user";
     private val USER_AUTHORITY = SimpleGrantedAuthority("ROLE_USER");
+
+    @BeforeAll
+    fun beforeAll() {
+        fakeKeycloakUserStore.initializeFakeKeycloakUserStore(userRepository)
+    }
 
     @Test
     fun `test get user page`() {
@@ -59,12 +72,6 @@ class UserControllerIntegrationTest(
                 .jsonPath("$.content[0].lastName").isNotEmpty
         }
     }
-
-//    .expectStatus().isOk
-//    .expectBodyList(UserResource::class.java)
-//    .value<ListBodySpec<UserResource>> {
-//        assertThat(it).isEqualTo(expectedUserResources)
-//    }
 
     @Test
     fun `test get user by id`() {
@@ -132,7 +139,7 @@ class UserControllerIntegrationTest(
                 .value {
                     assertThat(it.uuid).isNotBlank
                     assertThat(it.uuid).matches("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\$")
-                    assertThat(it.version).isGreaterThan(0)
+                    assertThat(it.version).isEqualTo(0)
                     assertThat(it.email).isNotBlank
                     assertThat(it.firstName).isNotBlank
                     assertThat(it.lastName).isNotBlank
@@ -146,7 +153,12 @@ class UserControllerIntegrationTest(
     fun `test creating a user with blank lastName`() {
         runBlocking {
             // setup
-            val userCreateResource = UserCreateResource(firstName = "Roger", lastName = "")
+            val userCreateResource = UserCreateResource(
+                email = "roger.taylor@test.org",
+                password = "roger1",
+                firstName = "Roger",
+                lastName = ""
+            )
             // when
             webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .post()

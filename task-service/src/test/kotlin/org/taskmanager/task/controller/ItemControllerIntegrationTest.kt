@@ -101,7 +101,7 @@ class ItemControllerIntegrationTest(
     }
 
     @Test
-    fun `test get a item by invalid id`() {
+    fun `test get an item by invalid id`() {
         runBlocking {
             // when
             webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
@@ -122,7 +122,7 @@ class ItemControllerIntegrationTest(
     }
 
     @Test
-    fun `test create a item`() {
+    fun `test create an item`() {
         runBlocking {
             // setup
             val assigneeUuid = "00000000-0000-0000-0000-000000000001"
@@ -168,7 +168,7 @@ class ItemControllerIntegrationTest(
     }
 
     @Test
-    fun `test creating a item with blank description`() {
+    fun `test creating an item with blank description`() {
         runBlocking {
             // setup
             val itemCreateResource = ItemCreateResource(description = "")
@@ -191,7 +191,7 @@ class ItemControllerIntegrationTest(
     }
 
     @Test
-    fun `test updating a item`() {
+    fun `test updating an item`() {
         runBlocking {
             // setup
             val assigneeUuid = "00000000-0000-0000-0000-000000000001"
@@ -245,7 +245,7 @@ class ItemControllerIntegrationTest(
     }
 
     @Test
-    fun `test patching a item`() {
+    fun `test patching an item`() {
         runBlocking {
             // setup
             val originalItem = itemService.getById(3, null, true) // ensure item with id 3 exists
@@ -282,7 +282,7 @@ class ItemControllerIntegrationTest(
     }
 
     @Test
-    fun `test deleting a item`() {
+    fun `test deleting an item`() {
         runBlocking {
             // setup
             // should not throw ItemNotFoundException

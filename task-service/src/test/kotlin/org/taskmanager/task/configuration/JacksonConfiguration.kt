@@ -8,7 +8,7 @@ import org.taskmanager.task.testutils.SortJacksonModule
 
 
 @Configuration
-class JacksonConfig {
+class JacksonConfiguration {
 
     @Bean
     fun pageJacksonModule(): Module {
