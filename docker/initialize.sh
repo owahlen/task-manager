@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-# Variable that can be set with their defaults
+# Configuration variables that can be set with their defaults
 KEYCLOAK_HOST=${KEYCLOAK_HOST:-"localhost"}
 KEYCLOAK_PORT=${KEYCLOAK_PORT:-"8180"}
 TASKMANAGER_DB_NAME=${TASKMANAGER_DB_NAME:-"taskmanager"}
@@ -8,6 +8,8 @@ TASKMANAGER_DB_HOST=${TASKMANAGER_DB_HOST:-"localhost"}
 TASKMANAGER_DB_PORT=${TASKMANAGER_DB_PORT:-"5432"}
 TASKMANAGER_DB_USERNAME=${TASKMANAGER_DB_USERNAME:-"postgres"}
 TASKMANAGER_DB_PASSWORD=${TASKMANAGER_DB_PASSWORD:-"password"}
+
+# -------------------------------------------------------------------
 
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )" &> /dev/null && pwd 2> /dev/null; )";
 
