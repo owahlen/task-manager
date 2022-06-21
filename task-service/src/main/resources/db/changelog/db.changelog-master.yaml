@@ -27,11 +27,13 @@ databaseChangeLog:
                   type: varchar(36)
                   constraints:
                     nullable: false
+                    unique: true
               - column:
                   name: email
                   type: varchar(256)
                   constraints:
                     nullable: false
+                    unique: true
               - column:
                   name: first_name
                   type: varchar(100)
