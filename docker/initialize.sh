@@ -9,18 +9,17 @@ TASKMANAGER_DB_PORT=${TASKMANAGER_DB_PORT:-"5432"}
 TASKMANAGER_DB_USERNAME=${TASKMANAGER_DB_USERNAME:-"postgres"}
 TASKMANAGER_DB_PASSWORD=${TASKMANAGER_DB_PASSWORD:-"password"}
 
-SCRIPT=$(readlink -f "$0")
-SCRIPT_PATH=$(dirname "${SCRIPT}")
+SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )" &> /dev/null && pwd 2> /dev/null; )";
 
 # Initialize Keycloak and put the UUID of the admin user in the admin_user_id variable
 echo "Initializing Keycloak"
 source <(docker run --net="host" --rm -e "realmName=TaskManager" -e "KEYCLOAK_HOST=${KEYCLOAK_HOST}" -e "KEYCLOAK_PORT=${KEYCLOAK_PORT}" \
-  -v ${SCRIPT_PATH}/keycloak:/opt/jboss/initialize --entrypoint /bin/bash jboss/keycloak -c /opt/jboss/initialize/initialize-keycloak.sh - \
+  -v ${SCRIPT_DIR}/keycloak:/opt/jboss/initialize --entrypoint /bin/bash jboss/keycloak -c /opt/jboss/initialize/initialize-keycloak.sh - \
   | tee /dev/tty)
 
 # Create database schema of task-service
 echo "Creating database schema for task-service"
-docker run --net="host" --rm -v ${SCRIPT_PATH}/../task-service/src/main/resources:/liquibase/changelog liquibase/liquibase \
+docker run --net="host" --rm -v ${SCRIPT_DIR}/../task-service/src/main/resources:/liquibase/changelog liquibase/liquibase \
   --url="jdbc:postgresql://${TASKMANAGER_DB_HOST}:${TASKMANAGER_DB_PORT}/${TASKMANAGER_DB_NAME}?sslmode=disable" \
   --changeLogFile=classpath:/db/changelog/db.changelog-master.yaml --username=${TASKMANAGER_DB_USERNAME} --password=${TASKMANAGER_DB_PASSWORD} update
 
