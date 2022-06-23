@@ -28,7 +28,7 @@ services:
       KEYCLOAK_USER: admin
       KEYCLOAK_PASSWORD: password
     volumes:
-      - ./imports:/opt/jboss/keycloak/imports
+      - ../keycloak-extension/build/libs:/opt/jboss/keycloak/standalone/deployments
 
   keycloak_db:
     image: postgres
