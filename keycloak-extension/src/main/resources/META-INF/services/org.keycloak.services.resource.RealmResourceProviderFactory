@@ -1,1 +1,2 @@
-keycloak.apiextension.KeyCloakUserApiProviderFactory
+keycloak.apiextension.ResetPasswordEmailResourceProviderFactory
+keycloak.apiextension.SendVerifyEmailResourceProviderFactory

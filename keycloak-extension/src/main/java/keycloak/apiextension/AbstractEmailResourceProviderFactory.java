@@ -1,18 +1,20 @@
 package keycloak.apiextension;
 
-import keycloak.apiextension.KeyCloakUserApiProvider;
 import org.keycloak.Config.Scope;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.KeycloakSessionFactory;
 import org.keycloak.services.resource.RealmResourceProvider;
 import org.keycloak.services.resource.RealmResourceProviderFactory;
 
-public class KeyCloakUserApiProviderFactory implements RealmResourceProviderFactory {
-    public static final String ID = "userapi-rest";
+public abstract class AbstractEmailResourceProviderFactory implements RealmResourceProviderFactory {
 
-    public RealmResourceProvider create(KeycloakSession session) {
-        return new KeyCloakUserApiProvider(session);
+    private final String id;
+
+    public AbstractEmailResourceProviderFactory(String id) {
+        this.id = id;
     }
+
+    abstract public RealmResourceProvider create(KeycloakSession session);
 
     public void init(Scope config) {
     }
@@ -24,6 +26,6 @@ public class KeyCloakUserApiProviderFactory implements RealmResourceProviderFact
     }
 
     public String getId() {
-        return ID;
+        return id;
     }
 }
