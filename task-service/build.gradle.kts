@@ -50,10 +50,6 @@ dependencies {
     testRuntimeOnly("io.r2dbc:r2dbc-h2")
 }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
-}
-
 tasks.withType<KotlinCompile> {
     kotlinOptions {
         freeCompilerArgs = listOf("-Xjsr305=strict")
@@ -61,21 +57,25 @@ tasks.withType<KotlinCompile> {
     }
 }
 
+tasks.withType<Test> {
+    useJUnitPlatform()
+}
+
 apply(plugin = "com.palantir.docker")
 
 docker {
-    name = "owahlen/task-manager:".plus(version)
-    uri("owahlen/task-manager:".plus(version))
-    tag("name", "task-manager")
-    buildArgs(mapOf("NAME" to "task-manager", "BUILD_VERSION" to version.toString()))
+    name = "owahlen/task-service:".plus(version)
+    uri("owahlen/task-service:".plus(version))
+    tag("name", "task-service")
+    buildArgs(mapOf("NAME" to "task-service", "BUILD_VERSION" to version.toString()))
     copySpec.from("build").into("build")
     pull(true)
     setDockerfile(file("Dockerfile"))
 }
 
 dockerRun {
-    name = "task-manager"
-    image = "owahlen/task-manager:".plus(version)
+    name = "task-service"
+    image = "owahlen/task-service:".plus(version)
     ports("8080:8080")
 }
 

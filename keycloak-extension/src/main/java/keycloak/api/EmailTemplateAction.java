@@ -1,4 +1,4 @@
-package keycloak.apiextension;
+package keycloak.api;
 
 import org.keycloak.email.EmailException;
 import org.keycloak.email.EmailTemplateProvider;

@@ -1,4 +1,4 @@
-package keycloak.apiextension;
+package keycloak.api;
 
 import org.keycloak.Config.Scope;
 import org.keycloak.models.KeycloakSession;

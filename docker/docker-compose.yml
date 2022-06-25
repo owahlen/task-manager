@@ -19,6 +19,7 @@ services:
       - taskmanager
     ports:
       - 8180:8080
+      - 8787:8787
     environment:
       DB_VENDOR: POSTGRES
       DB_ADDR: keycloak_db
@@ -27,6 +28,8 @@ services:
       DB_PASSWORD: password
       KEYCLOAK_USER: admin
       KEYCLOAK_PASSWORD: password
+      DEBUG: "true"
+      DEBUG_PORT: "*:8787"
     volumes:
       - ../keycloak-extension/build/libs:/opt/jboss/keycloak/standalone/deployments
 

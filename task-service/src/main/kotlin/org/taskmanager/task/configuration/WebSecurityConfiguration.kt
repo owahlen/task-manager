@@ -18,7 +18,7 @@ import reactor.core.publisher.Mono
 
 @EnableWebFluxSecurity
 @EnableReactiveMethodSecurity
-class ApiSecurityConfiguration {
+class WebSecurityConfiguration {
 
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {

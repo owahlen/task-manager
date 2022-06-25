@@ -1,15 +1,14 @@
-package keycloak.apiextension;
+package keycloak.api;
 
+import keycloak.token.VerifyEmailRestActionToken;
+import org.keycloak.authentication.actiontoken.DefaultActionToken;
 import org.keycloak.email.EmailTemplateProvider;
 import org.keycloak.models.KeycloakSession;
-import org.keycloak.models.UserModel;
 import org.keycloak.protocol.oidc.OIDCLoginProtocol;
 import org.keycloak.services.ErrorResponse;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
-import java.util.Collections;
-import java.util.List;
 
 public class SendVerifyEmailResourceProvider extends AbstractEmailResourceProvider {
 
@@ -28,9 +27,12 @@ public class SendVerifyEmailResourceProvider extends AbstractEmailResourceProvid
         if (userId == null) {
             return ErrorResponse.error("User id missing", Response.Status.BAD_REQUEST);
         }
-        List<String> actions = Collections.singletonList(UserModel.RequiredAction.VERIFY_EMAIL.name());
-        EmailActionExecutor emailActionExecutor = new EmailActionExecutor(EmailTemplateProvider::sendVerifyEmail);
-        return emailActionExecutor.execute(session, userId, redirectUri, clientId, null, actions);
+        EmailActionExecutor emailActionExecutor = new EmailActionExecutor(this::createToken, EmailTemplateProvider::sendVerifyEmail);
+        return emailActionExecutor.execute(session, userId, redirectUri, clientId, null);
+    }
+
+    public DefaultActionToken createToken(String userId, String email, int absoluteExpirationInSecs, String redirectUri, String clientId) {
+        return new VerifyEmailRestActionToken(userId, absoluteExpirationInSecs, email, redirectUri, clientId);
     }
 
 }

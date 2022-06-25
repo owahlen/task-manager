@@ -1,7 +1,7 @@
-package keycloak.apiextension;
+package keycloak.api;
 
 import org.jboss.logging.Logger;
-import org.keycloak.authentication.actiontoken.execactions.ExecuteActionsActionToken;
+import org.keycloak.authentication.actiontoken.DefaultActionToken;
 import org.keycloak.common.util.Time;
 import org.keycloak.email.EmailException;
 import org.keycloak.email.EmailTemplateProvider;
@@ -14,16 +14,18 @@ import org.keycloak.services.resources.LoginActionsService;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class EmailActionExecutor {
 
     private static final Logger logger = Logger.getLogger(EmailActionExecutor.class);
 
+    private final DefaultActionTokenFactory tokenFactory;
+
     private final EmailTemplateAction emailTemplateAction;
 
-    public EmailActionExecutor(EmailTemplateAction emailTemplateAction) {
+    public EmailActionExecutor(DefaultActionTokenFactory tokenFactory, EmailTemplateAction emailTemplateAction) {
+        this.tokenFactory = tokenFactory;
         this.emailTemplateAction = emailTemplateAction;
     }
 
@@ -31,8 +33,7 @@ public class EmailActionExecutor {
                             String userId,
                             String redirectUri,
                             String clientId,
-                            Integer lifespan,
-                            List<String> actions
+                            Integer lifespan
     ) {
 
         RealmModel realm = session.getContext().getRealm();
@@ -82,7 +83,7 @@ public class EmailActionExecutor {
         }
         int expiration = Time.currentTime() + lifespan;
 
-        ExecuteActionsActionToken token = new ExecuteActionsActionToken(user.getId(), user.getEmail(), expiration, actions, redirectUri, clientId);
+        DefaultActionToken token = tokenFactory.create(user.getId(), user.getEmail(), expiration, redirectUri, clientId);
 
         try {
             UriBuilder builder = LoginActionsService.actionTokenProcessor(session.getContext().getUri());
@@ -91,7 +92,6 @@ public class EmailActionExecutor {
             String link = builder.build(realm.getName()).toString();
 
             EmailTemplateProvider emailTemplateProvider = session.getProvider(EmailTemplateProvider.class)
-                    .setAttribute(Constants.TEMPLATE_ATTR_REQUIRED_ACTIONS, token.getRequiredActions())
                     .setRealm(realm)
                     .setUser(user);
             emailTemplateAction.execute(emailTemplateProvider, link, TimeUnit.SECONDS.toMinutes(lifespan));

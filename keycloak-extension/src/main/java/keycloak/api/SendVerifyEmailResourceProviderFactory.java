@@ -1,4 +1,4 @@
-package keycloak.apiextension;
+package keycloak.api;
 
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.services.resource.RealmResourceProvider;
