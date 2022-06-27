@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 
 public class EmailActionExecutor {
 
-    private static final Logger logger = Logger.getLogger(EmailActionExecutor.class);
+    private static final Logger log = Logger.getLogger(EmailActionExecutor.class);
 
     private final DefaultActionTokenFactory tokenFactory;
 
@@ -59,12 +59,12 @@ public class EmailActionExecutor {
 
         ClientModel client = realm.getClientByClientId(clientId);
         if (client == null) {
-            logger.debugf("Client %s doesn't exist", clientId);
+            log.debugf("Client %s doesn't exist", clientId);
             throw new WebApplicationException(
                     ErrorResponse.error("Client doesn't exist", Response.Status.BAD_REQUEST));
         }
         if (!client.isEnabled()) {
-            logger.debugf("Client %s is not enabled", clientId);
+            log.debugf("Client %s is not enabled", clientId);
             throw new WebApplicationException(
                     ErrorResponse.error("Client is not enabled", Response.Status.BAD_REQUEST));
         }

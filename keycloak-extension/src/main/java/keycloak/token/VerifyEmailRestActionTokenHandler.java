@@ -1,27 +1,38 @@
 package keycloak.token;
 
-import org.keycloak.authentication.actiontoken.AbstractActionTokenHandler;
+import org.jboss.logging.Logger;
 import org.keycloak.TokenVerifier.Predicate;
-import org.keycloak.authentication.actiontoken.*;
-import org.keycloak.events.*;
+import org.keycloak.authentication.actiontoken.AbstractActionTokenHandler;
+import org.keycloak.authentication.actiontoken.ActionTokenContext;
+import org.keycloak.authentication.actiontoken.TokenUtils;
+import org.keycloak.events.Details;
+import org.keycloak.events.Errors;
+import org.keycloak.events.EventBuilder;
+import org.keycloak.events.EventType;
 import org.keycloak.forms.login.LoginFormsProvider;
-import org.keycloak.models.Constants;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
 import org.keycloak.models.UserModel.RequiredAction;
+import org.keycloak.protocol.oidc.utils.RedirectUtils;
 import org.keycloak.services.Urls;
 import org.keycloak.services.managers.AuthenticationManager;
 import org.keycloak.services.managers.AuthenticationSessionManager;
 import org.keycloak.services.messages.Messages;
 import org.keycloak.sessions.AuthenticationSessionCompoundId;
 import org.keycloak.sessions.AuthenticationSessionModel;
-import java.util.Objects;
+
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
+import java.net.URI;
+import java.util.Objects;
 
-public class VerifyEmailRestActionTokenHandler extends AbstractActionTokenHandler<VerifyEmailRestActionToken>  {
+import static javax.ws.rs.core.Response.Status.FOUND;
+
+public class VerifyEmailRestActionTokenHandler extends AbstractActionTokenHandler<VerifyEmailRestActionToken> {
+
+    private static final Logger log = Logger.getLogger(VerifyEmailRestActionTokenHandler.class);
 
     public VerifyEmailRestActionTokenHandler() {
         super(
@@ -61,13 +72,9 @@ public class VerifyEmailRestActionTokenHandler extends AbstractActionTokenHandle
             token.setCompoundAuthenticationSessionId(authSessionEncodedId);
             UriBuilder builder = Urls.actionTokenBuilder(uriInfo.getBaseUri(), token.serialize(session, realm, uriInfo),
                     authSession.getClient().getClientId(), authSession.getTabId());
-            String confirmUri = builder.build(realm.getName()).toString();
+            URI confirmUri = builder.build(realm.getName());
 
-            return session.getProvider(LoginFormsProvider.class)
-                    .setAuthenticationSession(authSession)
-                    .setSuccess(Messages.CONFIRM_EMAIL_ADDRESS_VERIFICATION, user.getEmail())
-                    .setAttribute(Constants.TEMPLATE_ATTR_ACTION_URI, confirmUri)
-                    .createInfoPage();
+            return Response.status(FOUND).location(confirmUri).build();
         }
 
         // verify user email as we know it is valid as this entry point would never have gotten here.
@@ -76,6 +83,18 @@ public class VerifyEmailRestActionTokenHandler extends AbstractActionTokenHandle
         authSession.removeRequiredAction(RequiredAction.VERIFY_EMAIL);
 
         event.success();
+
+        String tokenRedirectUri = token.getRedirectUri();
+        if (tokenRedirectUri != null) {
+            // upon email verification is successful and the redirectUri is valid redirect to the url given in the token
+            String redirectUri = RedirectUtils.verifyRedirectUri(tokenContext.getSession(), tokenRedirectUri, authSession.getClient());
+            if (redirectUri != null) {
+                URI emailVerifiedUri = UriBuilder.fromUri(redirectUri).queryParam("emailVerified", "true").build();
+                return Response.status(FOUND).location(emailVerifiedUri).build();
+            } else {
+                log.warnf("The redirectUri '%s' of the token is ignored since it failed to verify.", tokenRedirectUri);
+            }
+        }
 
         if (token.getCompoundAuthenticationSessionId() != null) {
             AuthenticationSessionManager asm = new AuthenticationSessionManager(tokenContext.getSession());
