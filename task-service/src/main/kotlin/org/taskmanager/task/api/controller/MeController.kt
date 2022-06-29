@@ -19,7 +19,7 @@ import org.taskmanager.task.exception.AuthenticationTokenNotFoundException
  */
 @RestController
 @RequestMapping("/me")
-class AboutMeController() {
+class MeController() {
 
     @Operation(
         summary = "Get token attributes",

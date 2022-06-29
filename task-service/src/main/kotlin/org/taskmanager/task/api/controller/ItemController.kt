@@ -44,7 +44,7 @@ class ItemController(private val itemService: ItemService) {
         summary = "Get a specific item",
         responses = [
             ApiResponse(responseCode = "200", description = "got item by id"),
-            ApiResponse(responseCode = "400", description = "bad parameter"),
+            ApiResponse(responseCode = "400", description = "bad parameters"),
             ApiResponse(responseCode = "403", description = "insufficient privileges"),
             ApiResponse(responseCode = "404", description = "item not found")],
         security = [SecurityRequirement(name = "bearerAuth")]
@@ -59,7 +59,7 @@ class ItemController(private val itemService: ItemService) {
         summary = "Create an item",
         responses = [
             ApiResponse(responseCode = "200", description = "item created"),
-            ApiResponse(responseCode = "400", description = "bad parameter"),
+            ApiResponse(responseCode = "400", description = "bad request parameters"),
             ApiResponse(responseCode = "403", description = "insufficient privileges")],
         security = [SecurityRequirement(name = "bearerAuth")]
     )
@@ -73,7 +73,7 @@ class ItemController(private val itemService: ItemService) {
         summary = "Update an item",
         responses = [
             ApiResponse(responseCode = "200", description = "item updated"),
-            ApiResponse(responseCode = "400", description = "bad parameter"),
+            ApiResponse(responseCode = "400", description = "bad request parameters"),
             ApiResponse(responseCode = "403", description = "insufficient privileges"),
             ApiResponse(responseCode = "404", description = "item not found")],
         security = [SecurityRequirement(name = "bearerAuth")]
@@ -92,7 +92,7 @@ class ItemController(private val itemService: ItemService) {
         summary = "Patch an item",
         responses = [
             ApiResponse(responseCode = "200", description = "item patched"),
-            ApiResponse(responseCode = "400", description = "bad parameter"),
+            ApiResponse(responseCode = "400", description = "bad request parameters"),
             ApiResponse(responseCode = "403", description = "insufficient privileges"),
             ApiResponse(responseCode = "404", description = "item not found")],
         security = [SecurityRequirement(name = "bearerAuth")]
@@ -111,7 +111,7 @@ class ItemController(private val itemService: ItemService) {
         summary = "Delete an item",
         responses = [
             ApiResponse(responseCode = "200", description = "item deleted"),
-            ApiResponse(responseCode = "400", description = "bad parameter"),
+            ApiResponse(responseCode = "400", description = "bad request parameters"),
             ApiResponse(responseCode = "403", description = "insufficient privileges"),
             ApiResponse(responseCode = "404", description = "item not found")],
         security = [SecurityRequirement(name = "bearerAuth")]

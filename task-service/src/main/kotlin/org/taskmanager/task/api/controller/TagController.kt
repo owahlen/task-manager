@@ -17,9 +17,6 @@ import org.taskmanager.task.api.resource.TagCreateResource
 import org.taskmanager.task.api.resource.TagPatchResource
 import org.taskmanager.task.api.resource.TagResource
 import org.taskmanager.task.api.resource.TagUpdateResource
-import org.taskmanager.task.mapper.toTag
-import org.taskmanager.task.mapper.toTagResource
-import org.taskmanager.task.model.Tag
 import org.taskmanager.task.service.TagService
 import javax.validation.Valid
 
@@ -47,7 +44,7 @@ class TagController(private val tagService: TagService) {
         summary = "Get a specific tag",
         responses = [
             ApiResponse(responseCode = "200", description = "got tag by id"),
-            ApiResponse(responseCode = "400", description = "bad parameter"),
+            ApiResponse(responseCode = "400", description = "bad request parameters"),
             ApiResponse(responseCode = "403", description = "insufficient privileges"),
             ApiResponse(responseCode = "404", description = "tag not found")],
         security = [SecurityRequirement(name = "bearerAuth")]
@@ -62,7 +59,7 @@ class TagController(private val tagService: TagService) {
         summary = "Create a tag",
         responses = [
             ApiResponse(responseCode = "200", description = "tag created"),
-            ApiResponse(responseCode = "400", description = "bad parameter"),
+            ApiResponse(responseCode = "400", description = "bad request parameters"),
             ApiResponse(responseCode = "403", description = "insufficient privileges")],
         security = [SecurityRequirement(name = "bearerAuth")]
     )
@@ -76,7 +73,7 @@ class TagController(private val tagService: TagService) {
         summary = "Update a tag",
         responses = [
             ApiResponse(responseCode = "200", description = "tag updated"),
-            ApiResponse(responseCode = "400", description = "bad parameter"),
+            ApiResponse(responseCode = "400", description = "bad request parameters"),
             ApiResponse(responseCode = "403", description = "insufficient privileges"),
             ApiResponse(responseCode = "404", description = "tag not found")],
         security = [SecurityRequirement(name = "bearerAuth")]
@@ -95,7 +92,7 @@ class TagController(private val tagService: TagService) {
         summary = "Patch a tag",
         responses = [
             ApiResponse(responseCode = "200", description = "tag patched"),
-            ApiResponse(responseCode = "400", description = "bad parameter"),
+            ApiResponse(responseCode = "400", description = "bad request parameters"),
             ApiResponse(responseCode = "403", description = "insufficient privileges"),
             ApiResponse(responseCode = "404", description = "tag not found")],
         security = [SecurityRequirement(name = "bearerAuth")]
@@ -115,7 +112,7 @@ class TagController(private val tagService: TagService) {
         summary = "Delete a tag",
         responses = [
             ApiResponse(responseCode = "200", description = "tag deleted"),
-            ApiResponse(responseCode = "400", description = "bad parameter"),
+            ApiResponse(responseCode = "400", description = "bad request parameters"),
             ApiResponse(responseCode = "403", description = "insufficient privileges"),
             ApiResponse(responseCode = "404", description = "tag not found")],
         security = [SecurityRequirement(name = "bearerAuth")]

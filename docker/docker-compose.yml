@@ -28,6 +28,11 @@ services:
       DB_PASSWORD: password
       KEYCLOAK_USER: admin
       KEYCLOAK_PASSWORD: password
+      KAFKA_TOPIC: keycloak_events
+      KAFKA_CLIENT_ID: keycloak
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_ADMIN_TOPIC: keycloak_admin_events
+      KAFKA_EVENTS: "REGISTER,UPDATE_EMAIL,UPDATE_PROFILE,DELETE_ACCOUNT"
       DEBUG: "true"
       DEBUG_PORT: "*:8787"
     volumes:
@@ -56,6 +61,48 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
       POSTGRES_DB: taskmanager
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.1.2
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - taskmanager
+    ports:
+      - 22181:2181
+
+  kafka:
+    image: confluentinc/cp-kafka:7.1.2
+    depends_on:
+      - zookeeper
+    networks:
+      - taskmanager
+    ports:
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:master
+    depends_on:
+      - zookeeper
+      - kafka
+    networks:
+      - taskmanager
+    ports:
+      - "8280:8080"
+    restart: always
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
 
 networks:
   taskmanager:

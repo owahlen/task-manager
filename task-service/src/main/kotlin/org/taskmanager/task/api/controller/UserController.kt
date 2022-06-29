@@ -44,7 +44,7 @@ class UserController(private val userService: UserService) {
         summary = "Get a specific user",
         responses = [
             ApiResponse(responseCode = "200", description = "got user by id"),
-            ApiResponse(responseCode = "400", description = "bad parameter"),
+            ApiResponse(responseCode = "400", description = "bad request parameters"),
             ApiResponse(responseCode = "403", description = "insufficient privileges"),
             ApiResponse(responseCode = "404", description = "user not found")],
         security = [SecurityRequirement(name = "bearerAuth")]
@@ -56,10 +56,10 @@ class UserController(private val userService: UserService) {
     }
 
     @Operation(
-        summary = "Create a user",
+        summary = "Create a new user",
         responses = [
             ApiResponse(responseCode = "200", description = "user created"),
-            ApiResponse(responseCode = "400", description = "bad parameter"),
+            ApiResponse(responseCode = "400", description = "bad request parameters"),
             ApiResponse(responseCode = "403", description = "insufficient privileges")],
         security = [SecurityRequirement(name = "bearerAuth")]
     )
@@ -73,7 +73,7 @@ class UserController(private val userService: UserService) {
         summary = "Update a user",
         responses = [
             ApiResponse(responseCode = "200", description = "user updated"),
-            ApiResponse(responseCode = "400", description = "bad parameter"),
+            ApiResponse(responseCode = "400", description = "bad request parameters"),
             ApiResponse(responseCode = "403", description = "insufficient privileges"),
             ApiResponse(responseCode = "404", description = "user not found")],
         security = [SecurityRequirement(name = "bearerAuth")]
@@ -92,7 +92,7 @@ class UserController(private val userService: UserService) {
         summary = "Patch a user",
         responses = [
             ApiResponse(responseCode = "200", description = "user patched"),
-            ApiResponse(responseCode = "400", description = "bad parameter"),
+            ApiResponse(responseCode = "400", description = "bad request parameters"),
             ApiResponse(responseCode = "403", description = "insufficient privileges"),
             ApiResponse(responseCode = "404", description = "user not found")],
         security = [SecurityRequirement(name = "bearerAuth")]
@@ -111,7 +111,7 @@ class UserController(private val userService: UserService) {
         summary = "Delete a user",
         responses = [
             ApiResponse(responseCode = "200", description = "user deleted"),
-            ApiResponse(responseCode = "400", description = "bad parameter"),
+            ApiResponse(responseCode = "400", description = "bad request parameters"),
             ApiResponse(responseCode = "403", description = "insufficient privileges"),
             ApiResponse(responseCode = "404", description = "user not found")],
         security = [SecurityRequirement(name = "bearerAuth")]

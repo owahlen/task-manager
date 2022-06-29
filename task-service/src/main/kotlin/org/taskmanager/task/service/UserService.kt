@@ -1,7 +1,6 @@
 package org.taskmanager.task.service
 
 import kotlinx.coroutines.flow.toList
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
@@ -26,9 +25,7 @@ class UserService(
     private val keycloakUserService: KeycloakUserService,
     private val userRepository: UserRepository,
     private val itemRepository: ItemRepository,
-    private val itemTagRepository: ItemTagRepository,
-    @Value("\${keycloak.realm}")
-    private val realm: String
+    private val itemTagRepository: ItemTagRepository
 ) {
 
     /**

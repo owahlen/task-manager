@@ -54,3 +54,6 @@ echo ${admin_user_id}
 kcadm.sh set-password -r ${realmName} --userid ${admin_user_id} --new-password password
 kcadm.sh update users/${admin_user_id}/groups/${task_manager_users_group_id} -r ${realmName} -s realm=${realmName} -s userId=${admin_user_id} -s groupId=${task_manager_users_group_id} -n
 kcadm.sh update users/${admin_user_id}/groups/${task_manager_admins_group_id} -r ${realmName} -s realm=${realmName} -s userId=${admin_user_id} -s groupId=${task_manager_admins_group_id} -n
+
+echo "# Adding kafka event listener"
+kcadm.sh update events/config -r ${realmName} -s 'eventsListeners=["jboss-logging","kafka"]'
