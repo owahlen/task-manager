@@ -1,6 +1,7 @@
 package org.taskmanager.task.service
 
 import kotlinx.coroutines.flow.toList
+import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
@@ -10,8 +11,8 @@ import org.taskmanager.task.api.resource.UserCreateResource
 import org.taskmanager.task.api.resource.UserPatchResource
 import org.taskmanager.task.api.resource.UserResource
 import org.taskmanager.task.api.resource.UserUpdateResource
-import org.taskmanager.task.exception.UserNotFoundException
 import org.taskmanager.task.exception.UnexpectedUserVersionException
+import org.taskmanager.task.exception.UserNotFoundException
 import org.taskmanager.task.mapper.toUser
 import org.taskmanager.task.mapper.toUserResource
 import org.taskmanager.task.model.User
@@ -27,6 +28,16 @@ class UserService(
     private val itemRepository: ItemRepository,
     private val itemTagRepository: ItemTagRepository
 ) {
+
+    private val log = LoggerFactory.getLogger(UserService::class.java)
+
+    /**
+     * Synchronize user from Keycloak
+     */
+    fun synchronizeUserFromKeycloak(userId: String) {
+        // todo: delete, create, or update the user
+        log.info("Synchronizing user with id '$userId' from Keycloak")
+    }
 
     /**
      * Get a page of users

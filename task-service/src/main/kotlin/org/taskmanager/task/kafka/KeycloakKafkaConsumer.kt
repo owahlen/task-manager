@@ -2,30 +2,25 @@ package org.taskmanager.task.kafka
 
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import org.taskmanager.task.service.KeycloakUserService
+import org.taskmanager.task.service.UserService
 
 @Component
-class KeycloakKafkaConsumer(private val keycloakUserService: KeycloakUserService) {
+class KeycloakKafkaConsumer(private val userService: UserService) {
 
     private val log = LoggerFactory.getLogger(KeycloakKafkaConsumer::class.java)
 
     fun handleKeycloakEvent(event: KeycloakEvent) {
         log.trace("Consumed event: $event")
-        synchronizeUser(event.userId)
+        userService.synchronizeUserFromKeycloak(event.userId)
 
     }
 
     fun handleKeycloakAdminEvent(event: KeycloakAdminEvent) {
         log.trace("Consumed admin event: $event")
-        if(event.resourceType == "USER") {
+        if (event.resourceType == "USER") {
             val userId = event.resourcePath.split("/").last()
-            synchronizeUser(userId)
+            userService.synchronizeUserFromKeycloak(userId)
         }
-    }
-
-    private fun synchronizeUser(userId: String) {
-        val userRepresentation = keycloakUserService.findById(userId)
-        // todo: delete, create, or update the user
     }
 
 }
