@@ -28,10 +28,10 @@ services:
       DB_PASSWORD: password
       KEYCLOAK_USER: admin
       KEYCLOAK_PASSWORD: password
-      KAFKA_TOPIC: keycloak_events
+      KAFKA_TOPIC: keycloak-events
       KAFKA_CLIENT_ID: keycloak
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      KAFKA_ADMIN_TOPIC: keycloak_admin_events
+      KAFKA_ADMIN_TOPIC: keycloak-admin-events
       KAFKA_EVENTS: "REGISTER,UPDATE_EMAIL,UPDATE_PROFILE,DELETE_ACCOUNT"
       DEBUG: "true"
       DEBUG_PORT: "*:8787"

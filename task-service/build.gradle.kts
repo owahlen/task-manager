@@ -25,6 +25,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+    implementation("org.springframework.kafka:spring-kafka:2.8.7")
     implementation("org.springdoc:springdoc-openapi-kotlin:1.6.8")
     implementation("org.springdoc:springdoc-openapi-webflux-ui:1.6.8")
     implementation("org.springdoc:springdoc-openapi-security:1.6.8")

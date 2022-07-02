@@ -10,6 +10,9 @@ database:
     username: postgres
     password: password
 
+kafka:
+    bootstrapAddress: kafka:29092
+
 keycloak:
     realm: "TaskManager"
     resource: task-service
@@ -17,6 +20,10 @@ keycloak:
     group-name: "task-manager-users"
     credentials:
         secret: "2H1eJsF78MQL0akC9OE2lB7buGLIcIof"
+    kafka:
+        group-id: "task-service"
+        events-topic: keycloak-events
+        admin-events-topic: keycloak-admin-events
 
 
 logging:
