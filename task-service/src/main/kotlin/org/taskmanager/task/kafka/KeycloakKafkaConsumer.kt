@@ -18,8 +18,11 @@ class KeycloakKafkaConsumer(private val userService: UserService) {
     fun handleKeycloakAdminEvent(event: KeycloakAdminEvent) {
         log.trace("Consumed admin event: $event")
         if (event.resourceType == "USER") {
-            val userId = event.resourcePath.split("/").last()
-            userService.synchronizeUserFromKeycloak(userId)
+            event.resourcePath?.split("/")?.takeIf {
+                it.size==2 && it[0]=="users" && it[1].matches("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\$".toRegex())
+            }?.last()?.also { userId ->
+                userService.synchronizeUserFromKeycloak(userId)
+            }
         }
     }
 

@@ -28,6 +28,8 @@ services:
       DB_PASSWORD: password
       KEYCLOAK_USER: admin
       KEYCLOAK_PASSWORD: password
+      KEYCLOAK_WELCOME_THEME: taskmanager
+      KEYCLOAK_DEFAULT_THEME: taskmanager
       KAFKA_TOPIC: keycloak-events
       KAFKA_CLIENT_ID: keycloak
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
@@ -37,6 +39,7 @@ services:
       DEBUG_PORT: "*:8787"
     volumes:
       - ../keycloak-extension/build/libs:/opt/jboss/keycloak/standalone/deployments
+      - ./keycloak/themes/taskmanager:/opt/jboss/keycloak/themes/taskmanager
 
   keycloak_db:
     image: postgres

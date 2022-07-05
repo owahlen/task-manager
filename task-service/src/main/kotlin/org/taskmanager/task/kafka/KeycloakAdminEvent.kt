@@ -15,7 +15,7 @@ data class KeycloakAdminEvent(
     val authDetails: KeycloakAuthDetails,
     val resourceType: String,
     val operationType: OperationType,
-    val resourcePath: String,
+    val resourcePath: String?,
     // The representation is in JSON format but wrapped into a String
     @JsonDeserialize(using = FromStringJsonDeserializer::class)
     val representation: Map<String, Any>?,

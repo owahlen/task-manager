@@ -16,7 +16,7 @@ kcadm.sh config credentials --server http://${KEYCLOAK_HOST}:${KEYCLOAK_PORT}/au
 
 echo "# Creating realm ${realmName}"
 echo -n "export realm_id="
-realm_id=$(kcadm.sh create realms -i -s realm=${realmName} -s enabled=true -s editUsernameAllowed=true)
+realm_id=$(kcadm.sh create realms -i -s realm=${realmName} -s enabled=true -s registrationAllowed=true -s registrationEmailAsUsername=true -s editUsernameAllowed=true -s resetPasswordAllowed=true -s verifyEmail=true -s loginWithEmailAllowed=true)
 echo ${realm_id}
 
 echo "# Creating clients"
