@@ -1,18 +1,14 @@
-package org.taskmanager.task.api.resource
+package org.taskmanager.task.api.dto
 
 import javax.validation.constraints.Email
 import javax.validation.constraints.NotBlank
 import javax.validation.constraints.Size
 
-data class UserCreateResource(
+data class UserUpdateDto(
     @field:NotBlank
     @field:Size(max = 256)
     @field:Email
     var email: String? = null,
-
-    @field:NotBlank
-    @field:Size(max = 256)
-    var password: String? = null,
 
     @field:NotBlank
     @field:Size(max = 100)

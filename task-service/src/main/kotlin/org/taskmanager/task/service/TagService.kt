@@ -6,14 +6,14 @@ import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import org.taskmanager.task.api.resource.TagCreateResource
-import org.taskmanager.task.api.resource.TagPatchResource
-import org.taskmanager.task.api.resource.TagResource
-import org.taskmanager.task.api.resource.TagUpdateResource
+import org.taskmanager.task.api.dto.TagCreateDto
+import org.taskmanager.task.api.dto.TagPatchDto
+import org.taskmanager.task.api.dto.TagDto
+import org.taskmanager.task.api.dto.TagUpdateDto
 import org.taskmanager.task.exception.TagNotFoundException
 import org.taskmanager.task.exception.UnexpectedTagVersionException
 import org.taskmanager.task.mapper.toTag
-import org.taskmanager.task.mapper.toTagResource
+import org.taskmanager.task.mapper.toTagDto
 import org.taskmanager.task.model.Tag
 import org.taskmanager.task.repository.ItemTagRepository
 import org.taskmanager.task.repository.TagRepository
@@ -30,10 +30,10 @@ class TagService(
      * @param pageable page definition
      * @return flow of tags
      */
-    suspend fun findAllBy(pageable: Pageable): Page<TagResource> {
+    suspend fun findAllBy(pageable: Pageable): Page<TagDto> {
         val dataPage = tagRepository.findAllBy(pageable).toList()
         val total = tagRepository.count()
-        return PageImpl(dataPage, pageable, total).map(Tag::toTagResource)
+        return PageImpl(dataPage, pageable, total).map(Tag::toTagDto)
     }
 
     /**
@@ -42,8 +42,8 @@ class TagService(
      * @param version if version is not null check with currently stored user
      * @return the currently stored tag
      */
-    suspend fun getById(id: Long, version: Long? = null): TagResource {
-        return getTagById(id, version).toTagResource()
+    suspend fun getById(id: Long, version: Long? = null): TagDto {
+        return getTagById(id, version).toTagDto()
     }
 
     /**
@@ -52,9 +52,9 @@ class TagService(
      * @return the created tag
      */
     @Transactional
-    suspend fun create(tagCreateResource: TagCreateResource): TagResource {
-        val tag = tagCreateResource.toTag()
-        return tagRepository.save(tag).toTagResource()
+    suspend fun create(tagCreateDto: TagCreateDto): TagDto {
+        val tag = tagCreateDto.toTag()
+        return tagRepository.save(tag).toTagDto()
     }
 
     /**
@@ -63,9 +63,9 @@ class TagService(
      * @return the updated tag
      */
     @Transactional
-    suspend fun update(id: Long, version: Long?, tagUpdateResource: TagUpdateResource): TagResource {
-        val tag = tagUpdateResource.toTag(id, version)
-        return updateTag(tag).toTagResource()
+    suspend fun update(id: Long, version: Long?, tagUpdateDto: TagUpdateDto): TagDto {
+        val tag = tagUpdateDto.toTag(id, version)
+        return updateTag(tag).toTagDto()
     }
 
     /**
@@ -74,10 +74,10 @@ class TagService(
      * @return the patched tag
      */
     @Transactional
-    suspend fun patch(id: Long, version: Long?, tagPatchResource: TagPatchResource): TagResource {
+    suspend fun patch(id: Long, version: Long?, tagPatchDto: TagPatchDto): TagDto {
         val existingTag = getTagById(id, version)
-        val patchedTag = tagPatchResource.toTag(existingTag)
-        return updateTag(patchedTag).toTagResource()
+        val patchedTag = tagPatchDto.toTag(existingTag)
+        return updateTag(patchedTag).toTagDto()
     }
 
     /**

@@ -23,7 +23,7 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
-                  name: uuid
+                  name: user_id
                   type: varchar(36)
                   constraints:
                     nullable: false
@@ -37,13 +37,9 @@ databaseChangeLog:
               - column:
                   name: first_name
                   type: varchar(100)
-                  constraints:
-                    nullable: false
               - column:
                   name: last_name
                   type: varchar(100)
-                  constraints:
-                    nullable: false
               - column:
                   name: created_date
                   type: timestamp

@@ -22,7 +22,7 @@ data class User(
 
     @NotBlank
     @Size(max = 36)
-    var uuid: String? = null,
+    var userId: String? = null,
 
     @NotBlank
     @Size(max = 256)

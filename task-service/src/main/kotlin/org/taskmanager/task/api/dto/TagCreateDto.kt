@@ -1,9 +1,9 @@
-package org.taskmanager.task.api.resource
+package org.taskmanager.task.api.dto
 
 import javax.validation.constraints.NotBlank
 import javax.validation.constraints.Size
 
-data class TagCreateResource(
+data class TagCreateDto(
     @field:NotBlank
     @field:Size(max = 100)
     var name: String? = null,

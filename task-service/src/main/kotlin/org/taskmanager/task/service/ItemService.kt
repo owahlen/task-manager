@@ -7,12 +7,12 @@ import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import org.taskmanager.task.api.resource.*
+import org.taskmanager.task.api.dto.*
 import org.taskmanager.task.exception.ItemNotFoundException
 import org.taskmanager.task.exception.UnexpectedItemVersionException
 import org.taskmanager.task.exception.UserNotFoundException
 import org.taskmanager.task.mapper.toItem
-import org.taskmanager.task.mapper.toItemResource
+import org.taskmanager.task.mapper.toItemDto
 import org.taskmanager.task.model.Item
 import org.taskmanager.task.model.ItemTag
 import org.taskmanager.task.model.Tag
@@ -35,10 +35,10 @@ class ItemService(
      * @param pageable page definition
      * @return Page of items
      */
-    suspend fun findAllBy(pageable: Pageable): Page<ItemResource> {
+    suspend fun findAllBy(pageable: Pageable): Page<ItemDto> {
         val dataPage = itemRepository.findAllBy(pageable).map(::populateRelations).toList()
         val total = itemRepository.count()
-        return PageImpl(dataPage, pageable, total).map(Item::toItemResource)
+        return PageImpl(dataPage, pageable, total).map(Item::toItemDto)
     }
 
     /**
@@ -48,8 +48,8 @@ class ItemService(
      * @param loadRelations true if the related objects must also be retrieved
      * @return the currently stored item
      */
-    suspend fun getById(id: Long, version: Long? = null, loadRelations: Boolean = false): ItemResource {
-        return getItemById(id, version, loadRelations).toItemResource()
+    suspend fun getById(id: Long, version: Long? = null, loadRelations: Boolean = false): ItemDto {
+        return getItemById(id, version, loadRelations).toItemDto()
     }
 
     /**
@@ -58,11 +58,11 @@ class ItemService(
      * @return the created item without the related entities
      */
     @Transactional
-    suspend fun create(itemCreateResource: ItemCreateResource): ItemResource {
-        val assigneeId = itemCreateResource.assigneeUuid?.let { userRepository.findByUuid(it) }?.id
-        val item = itemCreateResource.toItem(assigneeId)
+    suspend fun create(itemCreateDto: ItemCreateDto): ItemDto {
+        val assigneeId = itemCreateDto.assigneeUserId?.let { userRepository.findByUserId(it) }?.id
+        val item = itemCreateDto.toItem(assigneeId)
         val savedItem = itemRepository.save(item)
-        itemCreateResource.tagIds?.map { tagId ->
+        itemCreateDto.tagIds?.map { tagId ->
             ItemTag(itemId = savedItem.id!!, tagId = tagId)
         }?.forEach {
             // Note: saveAll does not work with R2DBC therefore each itemTag is saved, individually
@@ -70,7 +70,7 @@ class ItemService(
         }
         return savedItem.also {
             populateRelations(savedItem)
-        }.toItemResource()
+        }.toItemDto()
     }
 
     /**
@@ -79,23 +79,23 @@ class ItemService(
      * @return the saved item without the related entities
      */
     @Transactional
-    suspend fun update(id: Long, version: Long?, itemUpdateResource: ItemUpdateResource): ItemResource {
-        val assigneeId = itemUpdateResource.assigneeUuid?.let { userRepository.findByUuid(it) }?.id
-        val item = itemUpdateResource.toItem(id, version, assigneeId)
-        return updateItem(item).toItemResource()
+    suspend fun update(id: Long, version: Long?, itemUpdateDto: ItemUpdateDto): ItemDto {
+        val assigneeId = itemUpdateDto.assigneeUserId?.let { userRepository.findByUserId(it) }?.id
+        val item = itemUpdateDto.toItem(id, version, assigneeId)
+        return updateItem(item).toItemDto()
     }
 
     @Transactional
-    suspend fun patch(id: Long, version: Long?, itemPatchResource: ItemPatchResource): ItemResource {
+    suspend fun patch(id: Long, version: Long?, itemPatchDto: ItemPatchDto): ItemDto {
         val existingItem = getItemById(id, version, true)
         // patch assignee
-        val patchAssigneeUuid = itemPatchResource.assigneeUuid.orElse(null)
-        val newAssigneeId = patchAssigneeUuid?.let {
-            userRepository.findByUuid(it) ?: throw UserNotFoundException(it)
+        val patchAssigneeUserId = itemPatchDto.assigneeUserId.orElse(null)
+        val newAssigneeId = patchAssigneeUserId?.let {
+            userRepository.findByUserId(it) ?: throw UserNotFoundException(it)
         }?.id ?: existingItem.assigneeId
         // patch tags
-        val patchedItem = itemPatchResource.toItem(existingItem, newAssigneeId)
-        return updateItem(patchedItem).toItemResource()
+        val patchedItem = itemPatchDto.toItem(existingItem, newAssigneeId)
+        return updateItem(patchedItem).toItemDto()
     }
 
     /**

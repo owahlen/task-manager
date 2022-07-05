@@ -13,10 +13,10 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType.APPLICATION_JSON_VALUE
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
-import org.taskmanager.task.api.resource.TagCreateResource
-import org.taskmanager.task.api.resource.TagPatchResource
-import org.taskmanager.task.api.resource.TagResource
-import org.taskmanager.task.api.resource.TagUpdateResource
+import org.taskmanager.task.api.dto.TagCreateDto
+import org.taskmanager.task.api.dto.TagPatchDto
+import org.taskmanager.task.api.dto.TagDto
+import org.taskmanager.task.api.dto.TagUpdateDto
 import org.taskmanager.task.service.TagService
 import javax.validation.Valid
 
@@ -36,7 +36,7 @@ class TagController(private val tagService: TagService) {
     suspend fun getAllTags(
         @PageableDefault(value = 100, sort = ["name"], direction = Sort.Direction.ASC)
         pageable: Pageable
-    ): Page<TagResource> {
+    ): Page<TagDto> {
         return tagService.findAllBy(pageable)
     }
 
@@ -51,7 +51,7 @@ class TagController(private val tagService: TagService) {
     )
     @GetMapping("/{id}", produces = [APPLICATION_JSON_VALUE])
     @PreAuthorize("hasRole('ROLE_USER')")
-    suspend fun getTagById(@PathVariable id: Long): TagResource {
+    suspend fun getTagById(@PathVariable id: Long): TagDto {
         return tagService.getById(id)
     }
 
@@ -65,8 +65,8 @@ class TagController(private val tagService: TagService) {
     )
     @PostMapping(produces = [APPLICATION_JSON_VALUE])
     @PreAuthorize("hasRole('ROLE_USER')")
-    suspend fun createTag(@Valid @RequestBody tagCreateResource: TagCreateResource): TagResource {
-        return tagService.create(tagCreateResource)
+    suspend fun createTag(@Valid @RequestBody tagCreateDto: TagCreateDto): TagDto {
+        return tagService.create(tagCreateDto)
     }
 
     @Operation(
@@ -83,9 +83,9 @@ class TagController(private val tagService: TagService) {
     suspend fun updateTag(
         @PathVariable id: Long,
         @RequestHeader(value = HttpHeaders.IF_MATCH) version: Long?,
-        @Valid @RequestBody tagUpdateResource: TagUpdateResource
-    ): TagResource {
-        return tagService.update(id, version, tagUpdateResource)
+        @Valid @RequestBody tagUpdateDto: TagUpdateDto
+    ): TagDto {
+        return tagService.update(id, version, tagUpdateDto)
     }
 
     @Operation(
@@ -102,10 +102,9 @@ class TagController(private val tagService: TagService) {
     suspend fun patchTag(
         @PathVariable id: Long,
         @RequestHeader(value = HttpHeaders.IF_MATCH) version: Long?,
-        @Valid @RequestBody tagPatchResource: TagPatchResource
-    ): TagResource {
-        val tag = tagService.getById(id, version)
-        return tagService.patch(id, version, tagPatchResource)
+        @Valid @RequestBody tagPatchDto: TagPatchDto
+    ): TagDto {
+        return tagService.patch(id, version, tagPatchDto)
     }
 
     @Operation(

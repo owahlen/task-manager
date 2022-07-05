@@ -1,11 +1,11 @@
-package org.taskmanager.task.api.resource
+package org.taskmanager.task.api.dto
 
 import io.swagger.v3.oas.annotations.media.Schema
 import org.taskmanager.task.api.validation.OptionalNotBlank
 import org.taskmanager.task.api.validation.OptionalSize
 import java.util.*
 
-data class TagPatchResource(
+data class TagPatchDto(
     // Kotlin has a limitation for validating bean validations in containers.
     // @see https://youtrack.jetbrains.com/issue/KT-26605
     // Therefore custom validators are used:

@@ -15,13 +15,11 @@ import org.springframework.security.test.web.reactive.server.SecurityMockServerC
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.taskmanager.task.IntegrationTest
-import org.taskmanager.task.api.resource.TagCreateResource
-import org.taskmanager.task.api.resource.TagPatchResource
-import org.taskmanager.task.api.resource.TagResource
-import org.taskmanager.task.api.resource.TagUpdateResource
+import org.taskmanager.task.api.dto.TagCreateDto
+import org.taskmanager.task.api.dto.TagPatchDto
+import org.taskmanager.task.api.dto.TagDto
+import org.taskmanager.task.api.dto.TagUpdateDto
 import org.taskmanager.task.exception.TagNotFoundException
-import org.taskmanager.task.mapper.toTagResource
-import org.taskmanager.task.model.Tag
 import org.taskmanager.task.service.TagService
 import java.util.*
 
@@ -72,7 +70,7 @@ class TagControllerIntegrationTest(
                 .exchange()
                 // then
                 .expectStatus().isOk
-                .expectBody(TagResource::class.java)
+                .expectBody(TagDto::class.java)
                 .value {
                     assertThat(it).isEqualTo(expectedTagResource)
                 }
@@ -104,12 +102,12 @@ class TagControllerIntegrationTest(
     fun `test create a tag`() {
         runBlocking {
             // setup
-            val tagCreateResource = TagCreateResource(name = "Weather")
+            val tagCreateDto = TagCreateDto(name = "Weather")
             // when
             webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .post()
                 .uri("/tag")
-                .bodyValue(tagCreateResource)
+                .bodyValue(tagCreateDto)
                 .exchange()
                 // then
                 .expectStatus().isOk
@@ -126,12 +124,12 @@ class TagControllerIntegrationTest(
     fun `test creating a tag with blank name`() {
         runBlocking {
             // setup
-            val tagCreateResource = TagCreateResource(name = "")
+            val tagCreateDto = TagCreateDto(name = "")
             // when
             webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .post()
                 .uri("/tag")
-                .bodyValue(tagCreateResource)
+                .bodyValue(tagCreateDto)
                 .exchange()
                 // then
                 .expectStatus().isBadRequest
@@ -149,18 +147,18 @@ class TagControllerIntegrationTest(
     fun `test updating a tag`() {
         runBlocking {
             // setup
-            val tagUpdateResource = TagUpdateResource(name = "Vacation")
+            val tagUpdateDto = TagUpdateDto(name = "Vacation")
             // when
             webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .put()
                 .uri("/tag/2")
-                .bodyValue(tagUpdateResource)
+                .bodyValue(tagUpdateDto)
                 .exchange()
                 // then
                 .expectStatus().isOk
-                .expectBody(TagResource::class.java)
+                .expectBody(TagDto::class.java)
                 .value {
-                    assertThat(it.name).isEqualTo(tagUpdateResource.name)
+                    assertThat(it.name).isEqualTo(tagUpdateDto.name)
                 }
         }
     }
@@ -170,17 +168,17 @@ class TagControllerIntegrationTest(
         runBlocking {
             // setup
             tagService.getById(3)
-            val tagPatchResource =
-                TagPatchResource(name = Optional.of("Zoo"))
+            val tagPatchDto =
+                TagPatchDto(name = Optional.of("Zoo"))
             // when
             webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .patch()
                 .uri("/tag/3")
-                .bodyValue(tagPatchResource)
+                .bodyValue(tagPatchDto)
                 .exchange()
                 // then
                 .expectStatus().isOk
-                .expectBody(TagResource::class.java)
+                .expectBody(TagDto::class.java)
                 .value {
                     assertThat(it.name).isEqualTo("Zoo")
                 }

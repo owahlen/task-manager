@@ -9,7 +9,7 @@ import org.springframework.data.domain.Sort
 import org.springframework.data.domain.Sort.Order
 import org.springframework.test.annotation.DirtiesContext
 import org.taskmanager.task.IntegrationTest
-import org.taskmanager.task.api.resource.ItemCreateResource
+import org.taskmanager.task.api.dto.ItemCreateDto
 
 
 @IntegrationTest
@@ -35,9 +35,9 @@ class ItemServiceIntegrationTest(@Autowired val itemService: ItemService) {
     fun `test create Item with description and status`() {
         runBlocking {
             // setup
-            val testItemCreateResource = ItemCreateResource(description = "test with description and status")
+            val testItemCreateDto = ItemCreateDto(description = "test with description and status")
             // when
-            val savedTestItem = itemService.create(testItemCreateResource)
+            val savedTestItem = itemService.create(testItemCreateDto)
             // then
             assertThat(savedTestItem.id).isNotNull()
             assertThat(savedTestItem.createdDate).isNotNull()
@@ -49,10 +49,10 @@ class ItemServiceIntegrationTest(@Autowired val itemService: ItemService) {
     fun `test create Item with tags`() {
         runBlocking {
             // setup
-            val testItemCreateResource = ItemCreateResource(description = "test with tags")
-            testItemCreateResource.tagIds = setOf(1,2)
+            val testItemCreateDto = ItemCreateDto(description = "test with tags")
+            testItemCreateDto.tagIds = setOf(1,2)
             // when
-            val savedTestItemCreateResource = itemService.create(testItemCreateResource)
+            val savedTestItemCreateResource = itemService.create(testItemCreateDto)
             // then
             assertThat(savedTestItemCreateResource.id).isNotNull()
             assertThat(savedTestItemCreateResource.tags?.size).isEqualTo(2)

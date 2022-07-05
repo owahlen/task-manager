@@ -17,14 +17,9 @@ import org.springframework.security.test.web.reactive.server.SecurityMockServerC
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.taskmanager.task.IntegrationTest
-import org.taskmanager.task.api.resource.*
+import org.taskmanager.task.api.dto.*
 import org.taskmanager.task.exception.ItemNotFoundException
-import org.taskmanager.task.mapper.toItemResource
-import org.taskmanager.task.mapper.toUserResource
-import org.taskmanager.task.mapper.toTagResource
-import org.taskmanager.task.model.Item
 import org.taskmanager.task.model.ItemStatus
-import org.taskmanager.task.model.Tag
 import org.taskmanager.task.service.ItemService
 import java.util.*
 
@@ -55,7 +50,7 @@ class ItemControllerIntegrationTest(
                 .exchange()
                 // then
                 .expectStatus().isOk
-                .expectBody(object : ParameterizedTypeReference<Page<ItemResource>>() {})
+                .expectBody(object : ParameterizedTypeReference<Page<ItemDto>>() {})
                 .value {
                     assertThat(it.totalPages).isGreaterThan(0)
                     assertThat(it.totalElements).isGreaterThan(0)
@@ -93,7 +88,7 @@ class ItemControllerIntegrationTest(
                 .exchange()
                 // then
                 .expectStatus().isOk
-                .expectBody(ItemResource::class.java)
+                .expectBody(ItemDto::class.java)
                 .value {
                     assertThat(it).isEqualTo(expectedItemResource)
                 }
@@ -125,18 +120,18 @@ class ItemControllerIntegrationTest(
     fun `test create an item`() {
         runBlocking {
             // setup
-            val assigneeUuid = "00000000-0000-0000-0000-000000000001"
-            val itemCreateResource =
-                ItemCreateResource(description = "do homework", assigneeUuid = assigneeUuid, tagIds = setOf(1, 2))
+            val assigneeUserId = "00000000-0000-0000-0000-000000000001"
+            val itemCreateDto =
+                ItemCreateDto(description = "do homework", assigneeUserId = assigneeUserId, tagIds = setOf(1, 2))
             // when
             webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .post()
                 .uri("/item")
-                .bodyValue(itemCreateResource)
+                .bodyValue(itemCreateDto)
                 .exchange()
                 // then
                 .expectStatus().isOk
-                .expectBody(ItemResource::class.java)
+                .expectBody(ItemDto::class.java)
                 .value {
                     assertThat(it.id).isNotNull
                     assertThat(it.version).isNotNull
@@ -144,7 +139,7 @@ class ItemControllerIntegrationTest(
                     assertThat(it.status).isEqualTo(ItemStatus.TODO)
                     val assignee = it.assignee
                     assertThat(assignee).isNotNull
-                    assertThat(assignee!!.uuid).isEqualTo(assigneeUuid)
+                    assertThat(assignee!!.userId).isEqualTo(assigneeUserId)
                     assertThat(assignee.version).isNotNull
                     assertThat(assignee.firstName).isNotBlank
                     assertThat(assignee.lastName).isNotBlank
@@ -171,12 +166,12 @@ class ItemControllerIntegrationTest(
     fun `test creating an item with blank description`() {
         runBlocking {
             // setup
-            val itemCreateResource = ItemCreateResource(description = "")
+            val itemCreateDto = ItemCreateDto(description = "")
             // when
             webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .post()
                 .uri("/item")
-                .bodyValue(itemCreateResource)
+                .bodyValue(itemCreateDto)
                 .exchange()
                 // then
                 .expectStatus().isBadRequest
@@ -194,23 +189,23 @@ class ItemControllerIntegrationTest(
     fun `test updating an item`() {
         runBlocking {
             // setup
-            val assigneeUuid = "00000000-0000-0000-0000-000000000001"
+            val assigneeUserId = "00000000-0000-0000-0000-000000000001"
             val originalItem = itemService.getById(2) // ensure item with id 3 exists
-            val itemUpdateResource = ItemUpdateResource(
+            val itemUpdateDto = ItemUpdateDto(
                     description = "do homework",
                     status = ItemStatus.DONE,
-                    assigneeUuid = assigneeUuid,
+                    assigneeUserId = assigneeUserId,
                     tagIds = setOf(1, 2)
                 )
             // when
             webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .put()
                 .uri("/item/2")
-                .bodyValue(itemUpdateResource)
+                .bodyValue(itemUpdateDto)
                 .exchange()
                 // then
                 .expectStatus().isOk
-                .expectBody(ItemResource::class.java)
+                .expectBody(ItemDto::class.java)
                 .value {
                     assertThat(it.id).isEqualTo(2)
                     assertThat(it.version).isNotNull
@@ -219,7 +214,7 @@ class ItemControllerIntegrationTest(
                     assertThat(it.status).isEqualTo(ItemStatus.DONE)
                     val assignee = it.assignee
                     assertThat(assignee).isNotNull
-                    assertThat(assignee!!.uuid).isEqualTo(assigneeUuid)
+                    assertThat(assignee!!.userId).isEqualTo(assigneeUserId)
                     assertThat(assignee.version).isNotNull
                     assertThat(assignee.firstName).isNotBlank
                     assertThat(assignee.lastName).isNotBlank
@@ -249,22 +244,22 @@ class ItemControllerIntegrationTest(
         runBlocking {
             // setup
             val originalItem = itemService.getById(3, null, true) // ensure item with id 3 exists
-            val itemPatchResource =
-                ItemPatchResource(
+            val itemPatchDto =
+                ItemPatchDto(
                     description = Optional.of("sleep"),
                     status = Optional.empty(),
-                    assigneeUuid = Optional.empty(),
+                    assigneeUserId = Optional.empty(),
                     tagIds = Optional.empty()
                 )
             // when
             webTestClient.mutateWith(mockJwt().jwt { it.subject(SUBJECT) }.authorities(USER_AUTHORITY))
                 .patch()
                 .uri("/item/3")
-                .bodyValue(itemPatchResource)
+                .bodyValue(itemPatchDto)
                 .exchange()
                 // then
                 .expectStatus().isOk
-                .expectBody(ItemResource::class.java)
+                .expectBody(ItemDto::class.java)
                 .value {
                     assertThat(it.id).isEqualTo(3)
                     assertThat(it.version).isNotNull
@@ -272,9 +267,9 @@ class ItemControllerIntegrationTest(
                     assertThat(it.description).isEqualTo("sleep")
                     assertThat(it.status).isEqualTo(originalItem.status)
                     assertThat(it.assignee).isEqualTo(originalItem.assignee)
-                    val tagResources = it.tags?.sortedBy(TagResource::id)
-                    val originalItemTagResources = originalItem.tags?.sortedBy(TagResource::id)
-                    assertThat(tagResources).isEqualTo(originalItemTagResources)
+                    val tagDtos = it.tags?.sortedBy(TagDto::id)
+                    val originalItemTagDtos = originalItem.tags?.sortedBy(TagDto::id)
+                    assertThat(tagDtos).isEqualTo(originalItemTagDtos)
                     assertThat(it.createdDate).isEqualTo(originalItem.createdDate)
                     assertThat(it.lastModifiedDate).isNotNull
                 }

@@ -27,6 +27,9 @@ echo -n "export task_service_client_id="
 task_service_client_id=$(kcadm.sh create clients -i -r ${realmName} -s clientId=${task_service_client_name} -s enabled=true -s clientAuthenticatorType=client-secret -s serviceAccountsEnabled=true -s secret=${task_service_client_secret})
 echo ${task_browser_client_id}
 
+echo "# Assigning realm-management/manage-users role to task_service service account"
+kcadm.sh add-roles -r ${realmName} --uusername "service-account-${task_service_client_name}" --cclientid "realm-management" --rolename "manage-users"
+
 echo "# Creating roles"
 echo -n "export role_user_id="
 role_user_id=$(kcadm.sh create roles -i -r ${realmName} -s name=ROLE_USER -s 'description=Regular user with limited set of permissions')

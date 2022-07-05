@@ -1,22 +1,22 @@
 package org.taskmanager.task.mapper
 
-import org.taskmanager.task.api.resource.*
+import org.taskmanager.task.api.dto.*
 import org.taskmanager.task.model.Item
 import org.taskmanager.task.model.ItemStatus
 import org.taskmanager.task.model.Tag
 
-fun Item.toItemResource() = ItemResource(
+fun Item.toItemDto() = ItemDto(
     id = this.id,
     version = this.version,
     description = this.description,
     status = this.status,
-    assignee = this.assignee?.toUserResource(),
-    tags = this.tags?.map { it.toTagResource() } ?: listOf(),
+    assignee = this.assignee?.toUserDto(),
+    tags = this.tags?.map { it.toTagDto() } ?: listOf(),
     createdDate = this.createdDate,
     lastModifiedDate = this.lastModifiedDate
 )
 
-fun ItemResource.toItem(assigneeId: Long?) = Item(
+fun ItemDto.toItem(assigneeId: Long?) = Item(
     id = this.id,
     version = this.version,
     description = this.description,
@@ -28,13 +28,13 @@ fun ItemResource.toItem(assigneeId: Long?) = Item(
     lastModifiedDate = this.lastModifiedDate
 )
 
-fun ItemCreateResource.toItem(assigneeId: Long?) = Item(
+fun ItemCreateDto.toItem(assigneeId: Long?) = Item(
     description = this.description,
     assigneeId = assigneeId,
     tags = this.tagIds?.map { Tag(id = it) }
 )
 
-fun ItemUpdateResource.toItem(id: Long, version: Long?, assigneeId: Long?) = Item(
+fun ItemUpdateDto.toItem(id: Long, version: Long?, assigneeId: Long?) = Item(
     id = id,
     version = version,
     description = this.description,
@@ -43,7 +43,7 @@ fun ItemUpdateResource.toItem(id: Long, version: Long?, assigneeId: Long?) = Ite
     tags = this.tagIds?.map { Tag(id = it) }
 )
 
-fun ItemPatchResource.toItem(item: Item, assigneeId: Long?) = Item(
+fun ItemPatchDto.toItem(item: Item, assigneeId: Long?) = Item(
     id = item.id,
     version = item.version,
     description = this.description.orElse(item.description),

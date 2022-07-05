@@ -12,10 +12,10 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType.APPLICATION_JSON_VALUE
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
-import org.taskmanager.task.api.resource.ItemCreateResource
-import org.taskmanager.task.api.resource.ItemPatchResource
-import org.taskmanager.task.api.resource.ItemResource
-import org.taskmanager.task.api.resource.ItemUpdateResource
+import org.taskmanager.task.api.dto.ItemCreateDto
+import org.taskmanager.task.api.dto.ItemPatchDto
+import org.taskmanager.task.api.dto.ItemDto
+import org.taskmanager.task.api.dto.ItemUpdateDto
 import org.taskmanager.task.service.ItemService
 import javax.validation.Valid
 
@@ -36,7 +36,7 @@ class ItemController(private val itemService: ItemService) {
     suspend fun getAllItems(
         @PageableDefault(value = 100, sort = ["lastModifiedDate", "description"], direction = Sort.Direction.ASC)
         pageable: Pageable
-    ): Page<ItemResource> {
+    ): Page<ItemDto> {
         return itemService.findAllBy(pageable)
     }
 
@@ -51,7 +51,7 @@ class ItemController(private val itemService: ItemService) {
     )
     @GetMapping("/{id}", produces = [APPLICATION_JSON_VALUE])
     @PreAuthorize("hasRole('ROLE_USER')")
-    suspend fun getItemById(@PathVariable id: Long): ItemResource {
+    suspend fun getItemById(@PathVariable id: Long): ItemDto {
         return itemService.getById(id)
     }
 
@@ -65,8 +65,8 @@ class ItemController(private val itemService: ItemService) {
     )
     @PostMapping(produces = [APPLICATION_JSON_VALUE])
     @PreAuthorize("hasRole('ROLE_USER')")
-    suspend fun createItem(@Valid @RequestBody itemCreateResource: ItemCreateResource): ItemResource {
-        return itemService.create(itemCreateResource)
+    suspend fun createItem(@Valid @RequestBody itemCreateDto: ItemCreateDto): ItemDto {
+        return itemService.create(itemCreateDto)
     }
 
     @Operation(
@@ -83,9 +83,9 @@ class ItemController(private val itemService: ItemService) {
     suspend fun updateItem(
         @PathVariable id: Long,
         @RequestHeader(value = HttpHeaders.IF_MATCH) version: Long?,
-        @Valid @RequestBody itemUpdateResource: ItemUpdateResource
-    ): ItemResource {
-        return itemService.update(id, version, itemUpdateResource)
+        @Valid @RequestBody itemUpdateDto: ItemUpdateDto
+    ): ItemDto {
+        return itemService.update(id, version, itemUpdateDto)
     }
 
     @Operation(
@@ -102,9 +102,9 @@ class ItemController(private val itemService: ItemService) {
     suspend fun patchItem(
         @PathVariable id: Long,
         @RequestHeader(value = HttpHeaders.IF_MATCH) version: Long?,
-        @Valid @RequestBody itemPatchResource: ItemPatchResource
-    ): ItemResource {
-        return itemService.patch(id, version, itemPatchResource)
+        @Valid @RequestBody itemPatchDto: ItemPatchDto
+    ): ItemDto {
+        return itemService.patch(id, version, itemPatchDto)
     }
 
     @Operation(

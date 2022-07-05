@@ -1,9 +1,9 @@
-package org.taskmanager.task.api.resource
+package org.taskmanager.task.api.dto
 
 import java.time.LocalDateTime
 
-data class UserResource(
-    val uuid: String? = null,
+data class UserDto(
+    val userId: String? = null,
     val version: Long? = null,
     var email: String? = null,
     var firstName: String? = null,

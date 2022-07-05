@@ -9,7 +9,6 @@ import org.taskmanager.task.model.User
 @Repository
 interface UserRepository : CoroutineSortingRepository<User, Long> {
     fun findAllBy(pageable: Pageable): Flow<User>
-    suspend fun findByUuid(uuid: String): User?
+    suspend fun findByUserId(userId: String): User?
     suspend fun findByEmailIgnoreCase(email: String): User?
 }
-

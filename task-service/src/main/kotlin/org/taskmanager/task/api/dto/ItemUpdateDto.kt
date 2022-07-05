@@ -1,11 +1,11 @@
-package org.taskmanager.task.api.resource
+package org.taskmanager.task.api.dto
 
 import org.taskmanager.task.model.ItemStatus
 import javax.validation.constraints.NotBlank
 import javax.validation.constraints.NotNull
 import javax.validation.constraints.Size
 
-data class ItemUpdateResource(
+data class ItemUpdateDto(
     @field:NotBlank
     @field:Size(max = 4000)
     var description: String? = null,
@@ -13,7 +13,7 @@ data class ItemUpdateResource(
     @field:NotNull
     var status: ItemStatus? = null,
 
-    var assigneeUuid: String? = null,
+    var assigneeUserId: String? = null,
 
     var tagIds: Set<Long>? = null,
 )

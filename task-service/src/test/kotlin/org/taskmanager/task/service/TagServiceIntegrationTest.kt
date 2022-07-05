@@ -10,9 +10,9 @@ import org.springframework.data.domain.Sort
 import org.springframework.data.domain.Sort.Order
 import org.springframework.test.annotation.DirtiesContext
 import org.taskmanager.task.IntegrationTest
-import org.taskmanager.task.api.resource.TagCreateResource
-import org.taskmanager.task.api.resource.TagResource
-import org.taskmanager.task.api.resource.TagUpdateResource
+import org.taskmanager.task.api.dto.TagCreateDto
+import org.taskmanager.task.api.dto.TagDto
+import org.taskmanager.task.api.dto.TagUpdateDto
 import org.taskmanager.task.exception.TagNotFoundException
 import org.taskmanager.task.exception.UnexpectedTagVersionException
 
@@ -31,7 +31,7 @@ class TagServiceIntegrationTest(@Autowired val tagService: TagService) {
             val tagResources = tagService.findAllBy(pageable).toList()
             // then
             assertThat(tagResources.count()).isGreaterThan(2)
-            val sortedTags = tagResources.sortedBy(TagResource::name)
+            val sortedTags = tagResources.sortedBy(TagDto::name)
             assertThat(tagResources).isEqualTo(sortedTags)
         }
     }
@@ -70,14 +70,14 @@ class TagServiceIntegrationTest(@Autowired val tagService: TagService) {
     fun `test create tag`() {
         runBlocking {
             // setup
-            val tagCreateResource = TagCreateResource("Weather")
+            val tagCreateDto = TagCreateDto("Weather")
             // when
-            val savedTag = tagService.create(tagCreateResource)
+            val savedTag = tagService.create(tagCreateDto)
             // then
             assertThat(savedTag).isNotNull
             assertThat(savedTag.id).isNotNull
             assertThat(savedTag.version).isNotNull
-            assertThat(savedTag.name).isEqualTo(tagCreateResource.name)
+            assertThat(savedTag.name).isEqualTo(tagCreateDto.name)
             assertThat(savedTag.createdDate).isNotNull
             assertThat(savedTag.lastModifiedDate).isNotNull
         }
@@ -88,14 +88,14 @@ class TagServiceIntegrationTest(@Autowired val tagService: TagService) {
         runBlocking {
             // setup
             val tagId = 2L
-            val tagUpdateResource = TagUpdateResource("Weather")
+            val tagUpdateDto = TagUpdateDto("Weather")
             // when
-            val updatedTag = tagService.update(tagId, null, tagUpdateResource)
+            val updatedTag = tagService.update(tagId, null, tagUpdateDto)
             // then
             assertThat(updatedTag).isNotNull
             assertThat(updatedTag.id).isEqualTo(tagId)
             assertThat(updatedTag.version).isNotNull
-            assertThat(updatedTag.name).isEqualTo(tagUpdateResource.name)
+            assertThat(updatedTag.name).isEqualTo(tagUpdateDto.name)
             assertThat(updatedTag.createdDate).isNotNull
             assertThat(updatedTag.lastModifiedDate).isNotNull
         }

@@ -5,7 +5,7 @@ DELETE FROM tag;
 DELETE FROM item;
 DELETE FROM users;
 
-INSERT INTO users (id, uuid, email, first_name, last_name) VALUES
+INSERT INTO users (id, user_id, email, first_name, last_name) VALUES
     (1, '00000000-0000-0000-0000-000000000001', 'richard.countin@test.org', 'Richard', 'Countin'),
     (2, '00000000-0000-0000-0000-000000000002', 'nathalie.queen@test.org', 'Nathalie', 'Queen'),
     (3, '00000000-0000-0000-0000-000000000003','benito.corazon@test.org', 'Benito', 'Corazon'),

@@ -7,9 +7,6 @@ import org.keycloak.representations.idm.UserRepresentation
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import org.taskmanager.task.api.resource.UserCreateResource
-import org.taskmanager.task.api.resource.UserPatchResource
-import org.taskmanager.task.api.resource.UserUpdateResource
 import org.taskmanager.task.exception.GroupNotFoundException
 import javax.ws.rs.core.Response
 
@@ -57,65 +54,50 @@ class KeycloakUserService(
      * Create a new user in the Keycloak realm
      * @param email email of the user to be created
      * @param password password of the user to be created
-     * @return the uuid of the user from Keycloak
+     * @return the userId of the user from Keycloak
      */
-    fun create(userCreateResource: UserCreateResource): String {
-        val email = userCreateResource.email ?: throw IllegalArgumentException(
-            "When creating a Keycloak user an email must be provided"
-        )
-        val password = userCreateResource.password ?: throw IllegalArgumentException(
-            "When creating a Keycloak user a password must be provided"
-        )
+    fun create(email: String, password: String, firstName: String?, lastName: String?): String {
         val passwordRepresentation = prepareCredentialRepresentation(password)
         val userRepresentation = prepareUserRepresentation(
             email,
-            userCreateResource.firstName,
-            userCreateResource.lastName,
+            firstName,
+            lastName,
             passwordRepresentation
         )
         val response = keycloak
             .realm(realm)
             .users()
             .create(userRepresentation)
-        val uuid = CreatedResponseUtil.getCreatedId(response)
-        assignToGroup(uuid, groupName)
-        log.debug("Keycloak user '${email}' created with uuid '${uuid}'")
-        return uuid
+        val userId = CreatedResponseUtil.getCreatedId(response)
+        assignToGroup(userId, groupName)
+        log.debug("Keycloak user '${email}' created with userId '${userId}'")
+        return userId
     }
 
     /**
      * Update an existing user in the Keycloak realm
+     * Only non-null parameters are respected
      * @param user user to be updated
      */
-    fun update(uuid: String, userUpdateResource: UserUpdateResource) {
+    fun update(userId: String, email: String?, password: String?, firstName: String?, lastName: String?) {
         updateUser(
-            uuid = uuid,
-            email = userUpdateResource.email,
-            password = userUpdateResource.password,
-            firstName = userUpdateResource.firstName,
-            lastName = userUpdateResource.lastName
-        )
-    }
-
-    fun patch(uuid: String, userPatchResource: UserPatchResource) {
-        updateUser(
-            uuid = uuid,
-            email = userPatchResource.email.orElse(null),
-            password = userPatchResource.password.orElse(null),
-            firstName = userPatchResource.firstName.orElse(null),
-            lastName = userPatchResource.lastName.orElse(null)
+            userId = userId,
+            email = email,
+            password = password,
+            firstName = firstName,
+            lastName = lastName
         )
     }
 
     /**
      * Delete an existing user in the Keycloak realm
-     * @param uuid uuid of the user to be deleted
+     * @param userId userId of the user to be deleted
      */
-    fun delete(uuid: String): Response {
+    fun delete(userId: String): Response {
         return keycloak
             .realm(realm)
             .users()
-            .delete(uuid)
+            .delete(userId)
     }
 
     private fun prepareCredentialRepresentation(password: String): CredentialRepresentation {
@@ -142,7 +124,7 @@ class KeycloakUserService(
         return newUser
     }
 
-    private fun updateUser(uuid: String, email: String?, password: String?, firstName: String?, lastName: String?) {
+    private fun updateUser(userId: String, email: String?, password: String?, firstName: String?, lastName: String?) {
         val userRepresentation = prepareUserRepresentation(
             email = email,
             firstName = firstName,
@@ -152,7 +134,7 @@ class KeycloakUserService(
         keycloak
             .realm(realm)
             .users()
-            .get(uuid)
+            .get(userId)
             .update(userRepresentation)
     }
 

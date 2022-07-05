@@ -54,9 +54,9 @@ class KeycloakTestConfiguration(
         val userRepresentation = slot<UserRepresentation>()
         every { usersResource.create(capture(userRepresentation)) } answers {
             val capturedUserRepresentation = userRepresentation.captured
-            val uuid = randomUUID().toString()
-            userStore.users[uuid] = FakeKeycloakUser(
-                uuid = uuid,
+            val userId = randomUUID().toString()
+            userStore.users[userId] = FakeKeycloakUser(
+                userId = userId,
                 username = capturedUserRepresentation.username,
                 email = capturedUserRepresentation.email,
                 firstName = capturedUserRepresentation.firstName,
@@ -66,7 +66,7 @@ class KeycloakTestConfiguration(
             )
             val response: Response = mockk()
             // response
-            every { response.location } returns URI("http://localhost/${uuid}")
+            every { response.location } returns URI("http://localhost/${userId}")
             every { response.statusInfo } returns Response.Status.CREATED
             response
         }

@@ -11,10 +11,10 @@ class FakeKeycloakUserStore(
     // only one group is supported
     val group = FakeKeycloakGroup(id = UUID.randomUUID().toString(), name = groupName)
 
-    // map uuid to FakeKeycloakUser
+    // map userId to FakeKeycloakUser
     val users: MutableMap<String, FakeKeycloakUser> = mutableMapOf()
 
-    // list of all the uuids of the users in the group
+    // list of all the userIds of the users in the group
     val groupUsers: MutableSet<String> = mutableSetOf()
 
     fun initializeFakeKeycloakUserStore(userRepository: UserRepository) {
@@ -23,8 +23,8 @@ class FakeKeycloakUserStore(
         runBlocking {
             val users = userRepository.findAll().toList()
             users.forEach {
-                this@FakeKeycloakUserStore.users[it.uuid!!] = FakeKeycloakUser(
-                    uuid = it.uuid!!,
+                this@FakeKeycloakUserStore.users[it.userId!!] = FakeKeycloakUser(
+                    userId = it.userId!!,
                     username = it.email!!,
                     email = it.email,
                     firstName = it.firstName,
@@ -32,7 +32,7 @@ class FakeKeycloakUserStore(
                     password = it.email!!,
                     isEnabled = true
                 )
-                groupUsers.add(it.uuid!!)
+                groupUsers.add(it.userId!!)
             }
         }
 

@@ -45,7 +45,7 @@ class UserRepositoryIntegrationTest(@Autowired val userRepository: UserRepositor
         runBlocking {
             // setup
             val user = User(
-                uuid="00000000-0000-0000-0000-000000001001",
+                userId="00000000-0000-0000-0000-000000001001",
                 email = "john.doe@test.org",
                 firstName = "John",
                 lastName = "Doe"
@@ -56,7 +56,7 @@ class UserRepositoryIntegrationTest(@Autowired val userRepository: UserRepositor
             assertThat(existingUser).isNotNull()
             assertThat(existingUser.id).isNotNull()
             assertThat(existingUser.version).isEqualTo(0)
-            assertThat(existingUser.uuid).isEqualTo(user.uuid)
+            assertThat(existingUser.userId).isEqualTo(user.userId)
             assertThat(existingUser.email).isEqualTo(user.email)
             assertThat(existingUser.firstName).isEqualTo(user.firstName)
             assertThat(existingUser.lastName).isEqualTo(user.lastName)
