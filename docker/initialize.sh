@@ -13,7 +13,7 @@ TASKMANAGER_DB_PASSWORD=${TASKMANAGER_DB_PASSWORD:-"password"}
 
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )" &> /dev/null && pwd 2> /dev/null; )";
 
-# Initialize Keycloak and put the UUID of the admin user in the admin_user_id variable
+# Initialize Keycloak and put the userId of the admin user in the admin_user_id variable
 echo "Initializing Keycloak"
 source <(docker run --net="host" --rm -e "realmName=TaskManager" -e "KEYCLOAK_HOST=${KEYCLOAK_HOST}" -e "KEYCLOAK_PORT=${KEYCLOAK_PORT}" \
   -v ${SCRIPT_DIR}/keycloak:/opt/jboss/initialize --entrypoint /bin/bash jboss/keycloak -c /opt/jboss/initialize/initialize-keycloak.sh - \
@@ -29,4 +29,4 @@ docker run --net="host" --rm -v ${SCRIPT_DIR}/../task-service/src/main/resources
 echo "Creating admin user for task-service"
 docker run --net="host" --rm -e PGPASSWORD=${TASKMANAGER_DB_PASSWORD} postgres psql \
   "postgresql://${TASKMANAGER_DB_USERNAME}@${TASKMANAGER_DB_HOST}:${TASKMANAGER_DB_PORT}/${TASKMANAGER_DB_NAME}" \
-   -c "INSERT INTO users (uuid, email, first_name, last_name) VALUES ('${admin_user_id}', 'admin', '', '');"
+   -c "INSERT INTO users (user_id, email, first_name, last_name) VALUES ('${admin_user_id}', 'admin', '', '');"
