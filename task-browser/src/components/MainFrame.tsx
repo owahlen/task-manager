@@ -12,8 +12,8 @@ const MainFrame = () => (
         <Menu/>
         <Routes>
             <Route path="/" element={<TaskList/>}/>
-            <Route path="/task/new" element={<TaskForm/>}/>
-            <Route path="/task/:taskId" element={<TaskDetails/>}/>
+            <Route path="/item/new" element={<TaskForm/>}/>
+            <Route path="/item/:taskId" element={<TaskDetails/>}/>
             <Route path="/secret" element={<PrivateRoute roles={['ROLE_ADMIN']}/>}>
                 <Route path="" element={<SecretTasks/>}/>
             </Route>

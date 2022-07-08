@@ -30,7 +30,7 @@ const TaskList = () => {
                         <tr key={task.id}>
                             <td>{task.id}</td>
                             <td>
-                                <Link to={`/tasks/${task.id}`}>{task.description}</Link>
+                                <Link to={`/item/${task.id}`}>{task.description}</Link>
                             </td>
                             <td>{task.status}</td>
                             <td>

@@ -10,7 +10,7 @@ const Menu = () => (
             <div id="navbar">
                 <ul className="nav navbar-nav">
                     <li><Link to="/">List</Link></li>
-                    <li><Link to="/tasks/new">New Task</Link></li>
+                    <li><Link to="/item/new">New Task</Link></li>
                     <li><Link to="/secret">Secret Tasks</Link></li>
                     <li><Link to="/foo">No Match</Link></li>
                 </ul>
