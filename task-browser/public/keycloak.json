@@ -1,0 +1,8 @@
+{
+  "realm": "TaskManager",
+  "auth-server-url": "http://localhost:8180/auth/",
+  "ssl-required": "external",
+  "resource": "task-browser",
+  "public-client": true,
+  "confidential-port": 0
+}

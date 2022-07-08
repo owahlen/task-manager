@@ -21,7 +21,7 @@ echo ${realm_id}
 
 echo "# Creating clients"
 echo -n "export task_browser_client_id="
-task_browser_client_id=$(kcadm.sh create clients -i -r ${realmName} -s clientId=${task_browser_client_name} -s 'redirectUris=["http://localhost:8080/*"]' -s directAccessGrantsEnabled=true -s publicClient=true)
+task_browser_client_id=$(kcadm.sh create clients -i -r ${realmName} -s clientId=${task_browser_client_name} -s 'redirectUris=["http://localhost:3000/*"]' -s directAccessGrantsEnabled=true -s publicClient=true)
 echo ${task_browser_client_id}
 echo -n "export task_service_client_id="
 task_service_client_id=$(kcadm.sh create clients -i -r ${realmName} -s clientId=${task_service_client_name} -s enabled=true -s clientAuthenticatorType=client-secret -s serviceAccountsEnabled=true -s secret=${task_service_client_secret})
@@ -49,6 +49,9 @@ echo ${task_manager_admins_group_id}
 echo "# Assigning roles to groups"
 kcadm.sh add-roles -r ${realmName} --gid ${task_manager_users_group_id} --rolename ROLE_USER
 kcadm.sh add-roles -r ${realmName} --gid ${task_manager_admins_group_id} --rolename ROLE_ADMIN
+
+echo "# Making task-manager-users a default group for new users"
+kcadm.sh update "realms/${realmName}/default-groups/${task_manager_users_group_id}"
 
 echo "# Creating user admin"
 echo -n "export admin_user_id="

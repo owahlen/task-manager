@@ -1,22 +1,28 @@
 import React from 'react';
 import './App.css';
-import Nav from "./components/Nav";
-import {BrowserRouter, Route, Routes} from "react-router-dom";
-import SecuredPage from "./pages/SecuredPage";
-import HomePage from "./pages/HomePage";
+import {BrowserRouter} from "react-router-dom";
+import StoreService from "./services/StoreService";
+import {Provider} from "react-redux";
+import RenderOnAnonymous from "./components/RenderOnAnonymous";
+import RenderOnAuthenticated from "./components/RenderOnAuthenticated";
+import Welcome from "./components/Welcome";
+import MainFrame from "./components/MainFrame";
 
-function App() {
-  return (
-      <div>
-        <Nav />
+const store = StoreService.setup();
+
+const App = () => (
+    <Provider store={store}>
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/secured" element={<SecuredPage />} />
-          </Routes>
+            <div className="container">
+                <RenderOnAnonymous>
+                    <Welcome/>
+                </RenderOnAnonymous>
+                <RenderOnAuthenticated>
+                    <MainFrame/>
+                </RenderOnAuthenticated>
+            </div>
         </BrowserRouter>
-      </div>
-  );
-}
+    </Provider>
+);
 
 export default App;
